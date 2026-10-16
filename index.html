@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delisted Games Dataset</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #ffffff; --text: #1c1917; --muted: #78716c;
+    --line: #e7e5e4; --accent: #2563eb; --row-hover: #f5f5f4;
+    --good: #16a34a; --mid: #d97706; --bad: #dc2626; --none: #d6d3d1;
+    --steam_tracker: #1e40af; --doesitplay: #7c3aed;
+    --delisted_games: #b45309; --dead_game_list: #be123c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0a09; --panel: #1c1917; --text: #f5f5f4; --muted: #a8a29e;
+      --line: #292524; --accent: #60a5fa; --row-hover: #262220; --none: #44403c;
+      --steam_tracker: #93c5fd; --doesitplay: #c4b5fd;
+      --delisted_games: #fcd34d; --dead_game_list: #fda4af;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; }
+  p.lead { color: var(--muted); margin: 0 0 20px; max-width: 760px; }
+  a { color: var(--accent); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+           gap: 10px; margin-bottom: 20px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+  .stat b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: .85rem; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .filters input, .filters select {
+    font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--panel); color: var(--text); min-width: 0; }
+  .filters input[type=search] { flex: 1 1 240px; }
+  .count { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+
+  .table-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 600; }
+  tr.game { cursor: pointer; }
+  tr.game:hover { background: var(--row-hover); }
+  tr.game td:first-child { font-weight: 550; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plat { color: var(--muted); font-size: .9rem; }
+
+  .badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: 1px 7px; margin: 1px 3px 1px 0;
+           border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .chips { display: flex; gap: 3px; }
+  .chip { width: 20px; height: 20px; border-radius: 4px; font-size: .7rem; font-weight: 700; color: #fff;
+          display: grid; place-items: center; }
+  .chip.good { background: var(--good); } .chip.mid { background: var(--mid); }
+  .chip.bad { background: var(--bad); } .chip.none { background: var(--none); color: var(--muted); }
+  .pending { color: var(--muted); font-size: .85rem; font-style: italic; }
+
+  tr.detail td { background: var(--bg); padding: 14px 16px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .card h3 { font-size: .95rem; margin: 0 0 6px; }
+  .card dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; font-size: .88rem; }
+  .card dt { color: var(--muted); }
+  .card dd { margin: 0; overflow-wrap: anywhere; }
+  .card .excerpt { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
+  .cls-table td { padding: 4px 8px; font-size: .88rem; }
+  .cls-table td:first-child { color: var(--muted); white-space: nowrap; }
+  .val { font-weight: 600; }
+  .val.good { color: var(--good); } .val.mid { color: var(--mid); } .val.bad { color: var(--bad); }
+  .val.none { color: var(--muted); font-weight: 400; }
+
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px; }
+  .pager button { font: inherit; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--line);
+                  background: var(--panel); color: var(--text); cursor: pointer; }
+  .pager button:disabled { opacity: .4; cursor: default; }
+
+  .taxonomy { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .taxonomy td { font-size: .9rem; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin: 8px 0 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+
+  @media (max-width: 640px) {
+    th.col-plat, td.col-plat, th.col-year, td.col-year { display: none; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delisted Games Dataset</h1>
+  <p class="lead">
+    Games collected from four community sources that track delisted, discontinued or at-risk games,
+    merged by normalized title. Titles are being classified along the seven dimensions of the
+    proposed taxonomy; titles not classified yet are marked as such. Click a row for details.
+  </p>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filters">
+    <input type="search" id="q" placeholder="Search title, publisher, developer, platform…" aria-label="Search">
+    <select id="f-source" aria-label="Source"></select>
+    <select id="f-status" aria-label="Classification status">
+      <option value="">All titles</option>
+      <option value="yes">Classified</option>
+      <option value="no">Not yet classified</option>
+    </select>
+    <select id="f-dim" aria-label="Taxonomy dimension"></select>
+    <select id="f-val" aria-label="Dimension value" disabled><option value="">Any value</option></select>
+    <select id="f-sort" aria-label="Sort">
+      <option value="title">Sort: title</option>
+      <option value="event-desc">Sort: event year (newest)</option>
+      <option value="event-asc">Sort: event year (oldest)</option>
+      <option value="sources">Sort: number of sources</option>
+    </select>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="count" id="count"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Title</th><th>Sources</th><th class="col-plat">Platforms</th>
+        <th class="col-year">Event year</th><th>Classification (D1–D7)</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <button id="prev">← Previous</button><span id="page"></span><button id="next">Next →</button>
+  </div>
+
+  <h2>Taxonomy</h2>
+  <table class="taxonomy">
+    <thead><tr><th>ID</th><th>Dimension</th><th>Question answered</th><th>Values</th></tr></thead>
+    <tbody id="taxonomy"></tbody>
+  </table>
+
+  <h2>Sources</h2>
+  <p class="lead" id="sources-text"></p>
+
+  <footer>
+    Event year is the year of delisting, server shutdown or status change reported by the source.
+    "Unknown" means the source data carries no evidence for that dimension; "N/A" means the dimension
+    does not apply. Data and classification are released as a research artifact.
+  </footer>
+</main>
+
+<script src="games.js"></script>
+<script src="classification.js"></script>
+<script>
+(() => {
+  const SOURCES = {
+    steam_tracker:  { label: "Steam Tracker",  url: "https://steam-tracker.com/apps/delisted" },
+    doesitplay:     { label: "Does It Play?",  url: "https://www.doesitplay.org/" },
+    delisted_games: { label: "Delisted Games", url: "https://delistedgames.com/" },
+    dead_game_list: { label: "Dead Game Wiki", url: "https://stopkillinggames.wiki.gg/wiki/Dead_game_list" },
+  };
+
+  // Table III; tone per value: good / mid / bad / none (no or neutral evidence).
+  const DIMS = [
+    ["D1", "Digital Availability", "Can I purchase this game from a digital store?",
+      { "Available": "good", "Regionally Limited": "mid", "Unavailable": "bad", "Never Offered": "none" }],
+    ["D2", "Physical Availability", "Can I purchase this game in a physical format?",
+      { "Retail": "good", "Second-hand": "mid", "Never released": "none" }],
+    ["D3", "Medium Completeness", "Is the game complete, or do I need major downloads?",
+      { "Complete": "good", "Partial": "mid", "Key or launcher only": "bad" }],
+    ["D4", "Online Dependency", "Can I play this game offline?",
+      { "None": "good", "Minor": "mid", "Launch Authentication": "bad", "Core Gameplay": "bad" }],
+    ["D5", "Service Status", "Is there a server active to run this game?",
+      { "Active": "good", "End-of-life announced": "mid", "Shut down": "bad", "N/A": "none" }],
+    ["D6", "Platform Accessibility", "Does this game run on my hardware?",
+      { "Run on current hardware platform or OS": "good", "Legacy Hardware": "mid", "Legacy OS": "mid" }],
+    ["D7", "Preservation", "Is the game preserved to any extent?",
+      { "Dev-Preserved": "good", "Fan-Resurrected": "good", "Fan-Preserved": "mid", "None": "bad" }],
+  ];
+  const tone = (i, v) => DIMS[i][3][v] || "none";
+
+  const PAGE_SIZE = 50;
+  const games = window.GAMES || [];
+  const cls = window.CLASSIFICATION || {};
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
+  const uniq = (a) => [...new Set(a.filter(Boolean))];
+
+  // Precompute per-title fields used by search, filters and sorting.
+  for (const g of games) {
+    g.name = g.r[0].n || g.id;
+    g.sources = uniq(g.r.map((r) => r.s));
+    g.platforms = uniq(g.r.map((r) => r.p));
+    const ey = g.r.map((r) => +r.ey).filter(Boolean);
+    g.event = ey.length ? Math.min(...ey) : null;
+    g.text = [g.id, ...g.r.flatMap((r) => [r.n, r.pub, r.dev, r.p])].join(" ").toLowerCase();
+    g.c = cls[g.id] || null;
+  }
+
+  // Stats.
+  const nRecords = games.reduce((n, g) => n + g.r.length, 0);
+  const nClassified = games.filter((g) => g.c).length;
+  const statItems = [
+    [games.length.toLocaleString(), "unique titles"],
+    [nRecords.toLocaleString(), "source records"],
+    ...Object.entries(SOURCES).map(([k, s]) =>
+      [games.filter((g) => g.sources.includes(k)).length.toLocaleString(), `titles in ${s.label}`]),
+    [nClassified.toLocaleString(), "titles classified"],
+  ];
+  document.getElementById("stats").innerHTML =
+    statItems.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
+
+  // Filter controls.
+  const $ = (id) => document.getElementById(id);
+  $("f-source").innerHTML = `<option value="">All sources</option>` +
+    Object.entries(SOURCES).map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join("");
+  $("f-dim").innerHTML = `<option value="">Any dimension</option>` +
+    DIMS.map(([id, name], i) => `<option value="${i}">${id} ${esc(name)}</option>`).join("");
+  $("f-dim").addEventListener("change", () => {
+    const i = $("f-dim").value;
+    const vals = i === "" ? [] : uniq([...Object.keys(DIMS[i][3]), "N/A", "Unknown"]);
+    $("f-val").innerHTML = `<option value="">Any value</option>` +
+      vals.map((v) => `<option>${esc(v)}</option>`).join("");
+    $("f-val").disabled = i === "";
+    update(true);
+  });
+
+  $("legend").innerHTML = [["good", "least restrictive"], ["mid", "partially restricted"],
+    ["bad", "most restrictive"], ["none", "unknown / not applicable"]]
+    .map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("") +
+    `<span>Hover a square for its value.</span>`;
+
+  $("taxonomy").innerHTML = DIMS.map(([id, name, q, vals]) =>
+    `<tr><td>${id}</td><td>${esc(name)}</td><td>${esc(q)}</td><td>${Object.keys(vals).map(esc).join(", ")}</td></tr>`
+  ).join("");
+
+  $("sources-text").innerHTML = Object.values(SOURCES)
+    .map((s) => `<a href="${s.url}" rel="noopener noreferrer" target="_blank">${esc(s.label)}</a>`).join(" · ");
+
+  // Rendering.
+  let page = 0, filtered = games, open = null;
+
+  function chips(g) {
+    if (!g.c) return `<span class="pending">Not yet classified</span>`;
+    return `<div class="chips">` + g.c.d.map((v, i) =>
+      `<span class="chip ${tone(i, v)}" title="${DIMS[i][0]} ${esc(DIMS[i][1])}: ${esc(v)}">${i + 1}</span>`
+    ).join("") + `</div>`;
+  }
+
+  function badges(g) {
+    return g.sources.map((s) =>
+      `<span class="badge" style="color:var(--${s})">${esc(SOURCES[s].label)}</span>`).join("");
+  }
+
+  function recordCard(r) {
+    const url = safeUrl(r.url);
+    const rows = [["Name", r.n], ["Platform", r.p], ["Publisher", r.pub], ["Developer", r.dev],
+                  ["Release year", r.ry], ["Event year", r.ey], ["Status", r.st]]
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+    return `<div class="card"><h3 style="color:var(--${r.s})">${esc(SOURCES[r.s].label)}</h3>
+      <dl>${rows}${url ? `<dt>Link</dt><dd><a href="${esc(url)}" rel="noopener noreferrer" target="_blank">${esc(new URL(url).hostname)}</a></dd>` : ""}</dl>
+      ${r.x ? `<p class="excerpt">${esc(r.x)}</p>` : ""}</div>`;
+  }
+
+  function classificationCard(g) {
+    if (!g.c) return `<div class="card"><h3>Classification</h3><p class="pending">This title has not been classified yet.</p></div>`;
+    const rows = g.c.d.map((v, i) =>
+      `<tr><td>${DIMS[i][0]} ${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
+    return `<div class="card"><h3>Classification</h3><table class="cls-table">${rows}</table>
+      ${g.c.note ? `<p class="excerpt"><b>Annotator note:</b> ${esc(g.c.note)}</p>` : ""}
+      ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}
+      ${g.c.src ? `<p class="excerpt">Judged on the platform listed in ${esc(SOURCES[g.c.src]?.label || g.c.src)}.</p>` : ""}</div>`;
+  }
+
+  function render() {
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    page = Math.min(page, pages - 1);
+    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    $("rows").innerHTML = slice.map((g) => {
+      const plat = g.platforms.slice(0, 3).join(", ") + (g.platforms.length > 3 ? ` +${g.platforms.length - 3}` : "");
+      const row = `<tr class="game" data-id="${esc(g.id)}" aria-expanded="${open === g.id}">
+        <td>${esc(g.name)}</td><td>${badges(g)}</td>
+        <td class="col-plat plat">${esc(plat)}</td><td class="col-year num">${g.event ?? "—"}</td>
+        <td>${chips(g)}</td></tr>`;
+      const detail = open === g.id
+        ? `<tr class="detail"><td colspan="5"><div class="detail-grid">${classificationCard(g)}${g.r.map(recordCard).join("")}</div></td></tr>`
+        : "";
+      return row + detail;
+    }).join("") || `<tr><td colspan="5" class="pending">No titles match these filters.</td></tr>`;
+    $("count").textContent = `${filtered.length.toLocaleString()} of ${games.length.toLocaleString()} titles`;
+    $("page").textContent = `Page ${page + 1} of ${pages}`;
+    $("prev").disabled = page === 0;
+    $("next").disabled = page >= pages - 1;
+  }
+
+  function update(resetPage) {
+    const q = $("q").value.trim().toLowerCase();
+    const src = $("f-source").value, status = $("f-status").value;
+    const dim = $("f-dim").value, val = $("f-val").value;
+    filtered = games.filter((g) =>
+      (!q || g.text.includes(q)) &&
+      (!src || g.sources.includes(src)) &&
+      (!status || (status === "yes") === !!g.c) &&
+      (dim === "" || (g.c && (!val || g.c.d[dim] === val))));
+    const sort = $("f-sort").value;
+    const byTitle = (a, b) => a.name.localeCompare(b.name);
+    const cmp = {
+      "title": byTitle,
+      "event-desc": (a, b) => (b.event ?? -1) - (a.event ?? -1) || byTitle(a, b),
+      "event-asc": (a, b) => (a.event ?? 1e4) - (b.event ?? 1e4) || byTitle(a, b),
+      "sources": (a, b) => b.sources.length - a.sources.length || byTitle(a, b),
+    }[sort];
+    filtered = [...filtered].sort(cmp);
+    if (resetPage) page = 0;
+    render();
+  }
+
+  let timer;
+  $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => update(true), 150); });
+  for (const id of ["f-source", "f-status", "f-val", "f-sort"]) $(id).addEventListener("change", () => update(true));
+  $("prev").addEventListener("click", () => { page--; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
+  $("next").addEventListener("click", () => { page++; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
+  $("rows").addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    const tr = e.target.closest("tr.game");
+    if (!tr) return;
+    open = open === tr.dataset.id ? null : tr.dataset.id;
+    render();
+  });
+
+  update(true);
+})();
+</script>
+</body>
+</html>
