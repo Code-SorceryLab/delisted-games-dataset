@@ -6,7 +6,7 @@ Dead Game Wiki), merged by normalized title, with their classification along a s
 taxonomy (digital availability, physical availability, medium completeness, online dependency,
 service status, platform accessibility, preservation).
 
-Titles not classified yet are marked as such; classification is being extended.
+All titles are classified; a random sample was reviewed manually, the rest were classified by fixed rules or by an LLM (Claude Haiku) from the source data. Each title shows its method.
 
 - `index.html` — the page
 - `games.js` — all titles and their source records

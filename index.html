@@ -98,8 +98,8 @@
   <h1>Delisted Games Dataset</h1>
   <p class="lead">
     Games collected from four community sources that track delisted, discontinued or at-risk games,
-    merged by normalized title. Titles are being classified along the seven dimensions of the
-    proposed taxonomy; titles not classified yet are marked as such. Click a row for details.
+    merged by normalized title, and classified along the seven dimensions of the proposed taxonomy.
+    Filter by method to see which labels were manually reviewed. Click a row for details.
   </p>
 
   <div class="stats" id="stats"></div>
@@ -107,10 +107,12 @@
   <div class="filters">
     <input type="search" id="q" placeholder="Search title, publisher, developer, platform…" aria-label="Search">
     <select id="f-source" aria-label="Source"></select>
-    <select id="f-status" aria-label="Classification status">
-      <option value="">All titles</option>
-      <option value="yes">Classified</option>
-      <option value="no">Not yet classified</option>
+    <select id="f-status" aria-label="Classification method">
+      <option value="">All methods</option>
+      <option value="manual review">Manually reviewed</option>
+      <option value="LLM (Haiku)">LLM (Haiku)</option>
+      <option value="rules">Rules</option>
+      <option value="none">Not yet classified</option>
     </select>
     <select id="f-dim" aria-label="Taxonomy dimension"></select>
     <select id="f-val" aria-label="Dimension value" disabled><option value="">Any value</option></select>
@@ -148,6 +150,9 @@
 
   <footer>
     Event year is the year of delisting, server shutdown or status change reported by the source.
+    Classification method: a random sample was reviewed manually; titles with free text or several sources were
+    classified by an LLM (Claude Haiku) from the source data and are not individually reviewed; the remaining titles
+    were classified by fixed rules over the source fields.
     "Unknown" means the source data carries no evidence for that dimension; "N/A" means the dimension
     does not apply. Data and classification are released as a research artifact.
   </footer>
@@ -206,12 +211,14 @@
   // Stats.
   const nRecords = games.reduce((n, g) => n + g.r.length, 0);
   const nClassified = games.filter((g) => g.c).length;
+  const nManual = games.filter((g) => g.c?.m === "manual review").length;
   const statItems = [
     [games.length.toLocaleString(), "unique titles"],
     [nRecords.toLocaleString(), "source records"],
     ...Object.entries(SOURCES).map(([k, s]) =>
       [games.filter((g) => g.sources.includes(k)).length.toLocaleString(), `titles in ${s.label}`]),
     [nClassified.toLocaleString(), "titles classified"],
+    [nManual.toLocaleString(), "manually reviewed"],
   ];
   document.getElementById("stats").innerHTML =
     statItems.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
@@ -273,7 +280,9 @@
     if (!g.c) return `<div class="card"><h3>Classification</h3><p class="pending">This title has not been classified yet.</p></div>`;
     const rows = g.c.d.map((v, i) =>
       `<tr><td>${DIMS[i][0]} ${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
+    const method = { "manual review": "Manually reviewed", "LLM (Haiku)": "LLM (Claude Haiku), not reviewed", "rules": "Rules over source fields" }[g.c.m] || g.c.m;
     return `<div class="card"><h3>Classification</h3><table class="cls-table">${rows}</table>
+      <p class="excerpt"><b>Method:</b> ${esc(method)}${g.c.conf ? ` · ${esc(g.c.conf)} confidence` : ""}</p>
       ${g.c.note ? `<p class="excerpt"><b>Annotator note:</b> ${esc(g.c.note)}</p>` : ""}
       ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}
       ${g.c.src ? `<p class="excerpt">Judged on the platform listed in ${esc(SOURCES[g.c.src]?.label || g.c.src)}.</p>` : ""}</div>`;
@@ -307,7 +316,7 @@
     filtered = games.filter((g) =>
       (!q || g.text.includes(q)) &&
       (!src || g.sources.includes(src)) &&
-      (!status || (status === "yes") === !!g.c) &&
+      (!status || (status === "none" ? !g.c : g.c?.m === status)) &&
       (dim === "" || (g.c && (!val || g.c.d[dim] === val))));
     const sort = $("f-sort").value;
     const byTitle = (a, b) => a.name.localeCompare(b.name);
