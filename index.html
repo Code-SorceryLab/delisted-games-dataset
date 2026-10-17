@@ -4,103 +4,188 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Delisted Games Dataset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
 <style>
+  /* Archive catalogue theme: paper, ink, catalogue cards and rubber stamps. */
   :root {
-    --bg: #fafaf9; --panel: #ffffff; --text: #1c1917; --muted: #78716c;
-    --line: #e7e5e4; --accent: #2563eb; --row-hover: #f5f5f4;
-    --good: #16a34a; --mid: #d97706; --bad: #dc2626; --none: #d6d3d1;
-    --steam_tracker: #1e40af; --doesitplay: #7c3aed;
-    --delisted_games: #b45309; --dead_game_list: #be123c;
+    --bg: #f3eee3; --panel: #fffdf7; --text: #2a241c; --muted: #75695a;
+    --line: #dcd2bf; --line-strong: #2a241c; --accent: #8c2a1c; --link: #2f5866;
+    --row-hover: #f8f3e8; --card-rule: #d9e2ea; --card-margin: #d79c92;
+    --good: #3f7a4f; --mid: #b0741d; --bad: #a3332a; --none: #d9cfbd;
+    --steam_tracker: #2d4a6b; --doesitplay: #5b4a87;
+    --delisted_games: #86561a; --dead_game_list: #9b2c3a;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Source Code Pro", ui-monospace, Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0c0a09; --panel: #1c1917; --text: #f5f5f4; --muted: #a8a29e;
-      --line: #292524; --accent: #60a5fa; --row-hover: #262220; --none: #44403c;
-      --steam_tracker: #93c5fd; --doesitplay: #c4b5fd;
-      --delisted_games: #fcd34d; --dead_game_list: #fda4af;
+      --bg: #16130f; --panel: #1f1b16; --text: #ece4d4; --muted: #a89c88;
+      --line: #3a3329; --line-strong: #ece4d4; --accent: #e08a76; --link: #8fc0cc;
+      --row-hover: #26211b; --card-rule: #2b3238; --card-margin: #6e3a33;
+      --good: #7fbf8c; --mid: #e0a85a; --bad: #e8786b; --none: #4a4236;
+      --steam_tracker: #9cb8d8; --doesitplay: #bcaee6;
+      --delisted_games: #e2b56f; --dead_game_list: #f0a0ab;
+      color-scheme: dark;
     }
   }
+  :root[data-theme="dark"] {
+    --bg: #16130f; --panel: #1f1b16; --text: #ece4d4; --muted: #a89c88;
+    --line: #3a3329; --line-strong: #ece4d4; --accent: #e08a76; --link: #8fc0cc;
+    --row-hover: #26211b; --card-rule: #2b3238; --card-margin: #6e3a33;
+    --good: #7fbf8c; --mid: #e0a85a; --bad: #e8786b; --none: #4a4236;
+    --steam_tracker: #9cb8d8; --doesitplay: #bcaee6;
+    --delisted_games: #e2b56f; --dead_game_list: #f0a0ab;
+    color-scheme: dark;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
-  h1 { font-size: 1.6rem; margin: 0 0 4px; }
-  h2 { font-size: 1.15rem; margin: 40px 0 12px; }
-  p.lead { color: var(--muted); margin: 0 0 20px; max-width: 760px; }
-  a { color: var(--accent); }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--sans); }
+  main { max-width: 1180px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; }
+  a { color: var(--link); text-underline-offset: 2px; }
+  .smallcaps { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-           gap: 10px; margin-bottom: 20px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
-  .stat b { display: block; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
-  .stat span { color: var(--muted); font-size: .85rem; }
+  /* Masthead. */
+  .masthead { border-top: 3px double var(--line-strong); border-bottom: 1px solid var(--line-strong);
+              padding: 14px 0 16px; margin-bottom: 18px; }
+  .masthead .eyebrow { display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.1; margin: 0 0 8px; }
+  p.lead { color: var(--muted); margin: 0; max-width: 760px; }
+  h2 { font-size: 1.3rem; margin: 44px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+
+  /* Accession ledger. */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           border: 1px solid var(--line); background: var(--panel); margin-bottom: 22px; }
+  .stat { padding: 10px 14px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
+  .stat b { display: block; font: 600 1.45rem/1.2 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+  .stat span { font-family: var(--mono); font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 
   .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .filters input, .filters select {
-    font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px;
-    background: var(--panel); color: var(--text); min-width: 0; }
+    font: inherit; font-size: .92rem; padding: 6px 10px; border: 1px solid var(--line); border-radius: 2px;
+    background: var(--panel); color: var(--text); min-width: 0; max-width: 100%; }
+  .filters input:focus, .filters select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   .filters input[type=search] { flex: 1 1 240px; }
-  .count { color: var(--muted); font-size: .9rem; margin-bottom: 8px; }
+  .dimfilter { border: 1px solid var(--line); background: var(--panel); margin: 0 0 12px; padding: 8px 12px 12px; min-width: 0; }
+  .dimfilter legend { padding: 0 6px; display: flex; gap: 10px; align-items: center; }
+  .dimfilter legend button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent);
+                             background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .dimopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+  .dimopt { display: grid; gap: 4px; align-content: start; min-width: 0; }
+  .dimopt label { display: flex; gap: 6px; align-items: baseline; font-size: .86rem; cursor: pointer; }
+  .dimopt label b { font-family: var(--mono); font-size: .74rem; font-weight: 500; color: var(--accent); }
+  .dimopt input { accent-color: var(--accent); margin: 0; align-self: center; }
+  .dimopt select { font: inherit; font-size: .82rem; padding: 3px 6px; border: 1px solid var(--line); border-radius: 2px;
+                   background: var(--panel); color: var(--text); width: 100%; }
+  .dimopt select:disabled { display: none; }
+  .chip.off { opacity: .22; }
+  .count { font-family: var(--mono); font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
 
-  .table-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+  /* Register table. */
+  .table-wrap { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--line-strong); overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 600; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 500; }
   tr.game { cursor: pointer; }
   tr.game:hover { background: var(--row-hover); }
-  tr.game td:first-child { font-weight: 550; }
-  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.game[aria-expanded="true"] { background: var(--row-hover); box-shadow: inset 3px 0 0 var(--accent); }
+  tr.game td:first-child { font-family: var(--serif); font-weight: 600; }
+  td.num { font-family: var(--mono); font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .plat { color: var(--muted); font-size: .9rem; }
 
-  .badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: 1px 7px; margin: 1px 3px 1px 0;
-           border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .badge { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 500; letter-spacing: .04em;
+           text-transform: uppercase; padding: 1px 6px; margin: 1px 3px 1px 0;
+           border-radius: 1px; border: 1px solid currentColor; white-space: nowrap; }
   .chips { display: flex; gap: 3px; }
-  .chip { width: 20px; height: 20px; border-radius: 4px; font-size: .7rem; font-weight: 700; color: #fff;
+  .chip { width: 20px; height: 20px; border-radius: 1px; font: 600 .68rem/1 var(--mono); color: #fff;
           display: grid; place-items: center; }
   .chip.good { background: var(--good); } .chip.mid { background: var(--mid); }
   .chip.bad { background: var(--bad); } .chip.none { background: var(--none); color: var(--muted); }
+  :root[data-theme="dark"] .chip:not(.none) { color: #16130f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip:not(.none) { color: #16130f; } }
   .pending { color: var(--muted); font-size: .85rem; font-style: italic; }
 
-  tr.detail td { background: var(--bg); padding: 14px 16px; }
-  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
-  .card h3 { font-size: .95rem; margin: 0 0 6px; }
+  /* Catalogue cards. */
+  tr.detail > td { background: var(--bg); padding: 16px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
+          padding: 12px 14px 14px; box-shadow: 0 1px 0 var(--line), 0 2px 6px rgb(0 0 0 / .05); min-width: 0; }
+  .card.catalog { border-top: 3px solid var(--card-margin); }
+  .card.catalog .card-head { border-bottom: 1px solid var(--card-margin); padding-bottom: 6px; }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .card h3 { font-size: 1rem; margin: 0; }
+  .card .kicker { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
   .card dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; font-size: .88rem; }
-  .card dt { color: var(--muted); }
+  .card dt { font-family: var(--mono); font-size: .74rem; color: var(--muted); padding-top: 2px; }
   .card dd { margin: 0; overflow-wrap: anywhere; }
   .card .excerpt { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
-  .cls-table td { padding: 4px 8px; font-size: .88rem; }
-  .cls-table td:first-child { color: var(--muted); white-space: nowrap; }
+  .card .excerpt b { color: var(--text); font-weight: 600; }
+  .cls-table { width: 100%; }
+  .cls-table td { padding: 5px 8px 5px 0; font-size: .88rem; border-bottom: 1px solid var(--card-rule); line-height: 1.35; }
+  .cls-table tr:last-child td { border-bottom: 0; }
+  .cls-table td:first-child { color: var(--muted); width: 48%; }
+  .cls-table td:first-child b { font-family: var(--mono); font-size: .74rem; font-weight: 500; color: var(--accent); margin-right: 4px; }
   .val { font-weight: 600; }
   .val.good { color: var(--good); } .val.mid { color: var(--mid); } .val.bad { color: var(--bad); }
   .val.none { color: var(--muted); font-weight: 400; }
 
-  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px; }
-  .pager button { font: inherit; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--line);
-                  background: var(--panel); color: var(--text); cursor: pointer; }
+  /* Rubber stamps. */
+  .stamps { display: flex; flex-wrap: wrap; gap: 8px 6px; margin: 4px 0 10px; }
+  .stamp { display: inline-block; font: 600 .7rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+           padding: 4px 7px 3px; border: 2px solid currentColor; border-radius: 3px; transform: rotate(-2deg);
+           color: var(--accent); opacity: .9; mix-blend-mode: multiply; }
+  .stamp.ok { color: var(--good); transform: rotate(1.5deg); }
+  .stamp.warn { color: var(--mid); transform: rotate(-1deg); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stamp { mix-blend-mode: normal; } }
+  :root[data-theme="dark"] .stamp { mix-blend-mode: normal; }
+
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px;
+           font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+  .pager button { font: inherit; color: var(--text); padding: 5px 12px; border-radius: 2px; border: 1px solid var(--line);
+                  background: var(--panel); cursor: pointer; }
+  .pager button:hover:not(:disabled) { border-color: var(--line-strong); }
   .pager button:disabled { opacity: .4; cursor: default; }
 
-  .taxonomy { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .taxonomy { width: 100%; background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--line-strong); }
   .taxonomy td { font-size: .9rem; }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin: 8px 0 16px; }
+  .taxonomy td:first-child { font-family: var(--mono); font-size: .82rem; color: var(--accent); }
+  .taxonomy td:nth-child(2) { font-family: var(--serif); font-weight: 600; }
+  .tax-wrap { overflow-x: auto; }
+  .tax-notes { margin: 12px 0 0; padding-left: 1.1em; font-size: .88rem; color: var(--muted); display: grid; gap: 4px; max-width: 90ch; }
+  .tax-notes b { color: var(--text); font-weight: 600; }
+  .methods td:first-child { font-family: var(--serif); font-size: .92rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+  .methods td:first-child, .methods td.num { width: 1%; }
+  .methods td.num { font-family: var(--mono); font-size: .85rem; text-align: right; padding-right: 20px; }
+  #methods + .lead { margin-bottom: 12px; }
+  .methods td:last-child { max-width: 70ch; }
+  .filters .info { align-self: center; font-size: .85rem; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); margin: 8px 0 16px; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-  footer { margin-top: 40px; color: var(--muted); font-size: .85rem; }
+  .legend i { width: 12px; height: 12px; border-radius: 1px; display: inline-block; }
+  #sources-text a { font-family: var(--serif); }
+  footer { margin-top: 44px; padding-top: 12px; border-top: 3px double var(--line-strong); color: var(--muted); font-size: .85rem; }
+  footer p { margin: 0; max-width: 820px; }
 
   @media (max-width: 640px) {
-    th.col-plat, td.col-plat, th.col-year, td.col-year { display: none; }
+    th.col-plat, td.col-plat, th.col-year, td.col-year, th.col-src, td.col-src { display: none; }
+    tr.detail > td { padding: 10px 8px; }
     th, td { padding: 8px; }
   }
 </style>
 </head>
 <body>
 <main>
-  <h1>Delisted Games Dataset</h1>
-  <p class="lead">
-    Games collected from four community sources that track delisted, discontinued or at-risk games,
-    merged by normalized title, and classified along the seven dimensions of the proposed taxonomy.
-    Filter by method to see which labels were manually reviewed. Click a row for details.
-  </p>
+  <header class="masthead">
+    <div class="eyebrow smallcaps"><span>SKVG Project &middot; Research Archive</span><span>Register of delisted &amp; defunct games</span></div>
+    <h1>Delisted Games Dataset</h1>
+    <p class="lead">
+      Games collected from four community sources that track delisted, discontinued or at-risk games,
+      merged by normalized title, and classified along the seven dimensions of the proposed taxonomy.
+      Filter by method to see which labels were manually reviewed. Click a row to open its catalogue card.
+    </p>
+  </header>
 
   <div class="stats" id="stats"></div>
 
@@ -114,8 +199,7 @@
       <option value="rules">Rules</option>
       <option value="none">Not yet classified</option>
     </select>
-    <select id="f-dim" aria-label="Taxonomy dimension"></select>
-    <select id="f-val" aria-label="Dimension value" disabled><option value="">Any value</option></select>
+    <a class="info" href="#methods">What are the methods?</a>
     <select id="f-sort" aria-label="Sort">
       <option value="title">Sort: title</option>
       <option value="event-desc">Sort: event year (newest)</option>
@@ -123,13 +207,17 @@
       <option value="sources">Sort: number of sources</option>
     </select>
   </div>
+  <fieldset class="dimfilter">
+    <legend class="smallcaps">Filter by dimension <button type="button" id="dim-clear" hidden>Clear</button></legend>
+    <div class="dimopts" id="dimopts"></div>
+  </fieldset>
   <div class="legend" id="legend"></div>
   <div class="count" id="count"></div>
 
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>Title</th><th>Sources</th><th class="col-plat">Platforms</th>
+        <th>Title</th><th class="col-src">Sources</th><th class="col-plat">Platforms</th>
         <th class="col-year">Event year</th><th>Classification (D1–D7)</th>
       </tr></thead>
       <tbody id="rows"></tbody>
@@ -140,21 +228,51 @@
   </div>
 
   <h2>Taxonomy</h2>
-  <table class="taxonomy">
+  <div class="tax-wrap"><table class="taxonomy">
     <thead><tr><th>ID</th><th>Dimension</th><th>Question answered</th><th>Values</th></tr></thead>
     <tbody id="taxonomy"></tbody>
-  </table>
+  </table></div>
+  <ul class="tax-notes">
+    <li><b>Unknown</b> (all dimensions): the source data has no evidence for the dimension.</li>
+    <li><b>N/A</b> (D5): the game has no online component, so there is no service to track.</li>
+    <li><b>Minor</b> vs. <b>Optional Multiplayer</b> (D4): with Minor, only peripheral services need a connection
+      (news, cosmetics, leaderboards, content sharing). With Optional Multiplayer, the multiplayer modes need a connection,
+      but single-player is fully playable offline.</li>
+    <li><b>Legacy OS</b> (D6): the hardware is still made, but the game needs a discontinued operating system or runtime
+      (e.g. Adobe Flash, Java applets, Unity Web Player, MS-DOS, Windows 9x) and has no official port to a current one.
+      This value requires the platform field or an explicit statement in the source; speculation about compatibility is not
+      evidence. When the hardware itself is discontinued, Legacy Hardware applies instead.</li>
+  </ul>
+
+  <h2 id="methods">Classification methods</h2>
+  <p class="lead">Each title carries one method, which says how its seven labels were assigned.
+    Manual labels take precedence over the other two methods.</p>
+  <div class="tax-wrap"><table class="taxonomy methods">
+    <thead><tr><th>Method</th><th>Titles</th><th>How the labels were assigned</th></tr></thead>
+    <tbody>
+      <tr><td>Manually reviewed</td><td class="num" data-m="manual review"></td>
+        <td>A random sample, stratified by source, labelled by hand by the authors from rule suggestions and annotator notes.</td></tr>
+      <tr><td>LLM (Claude Haiku)</td><td class="num" data-m="LLM (Haiku)"></td>
+        <td>Titles with free text (Dead Game Wiki notes, Delisted Games narratives) or records from several sources.
+          Claude Haiku labelled them from the source data; they are not individually reviewed.
+          On the manually reviewed pilot, Haiku agreed with the human labels on 97&ndash;99% of titles per dimension.
+          Each title carries a high, medium or low confidence.</td></tr>
+      <tr><td>Rules</td><td class="num" data-m="rules"></td>
+        <td>Fixed rules over structured source fields, e.g. Steam Tracker type &ldquo;Purchase disabled&rdquo; &rarr;
+          D1 = Unavailable. These titles have no free text; dimensions the fields do not cover stay Unknown.</td></tr>
+    </tbody>
+  </table></div>
 
   <h2>Sources</h2>
   <p class="lead" id="sources-text"></p>
 
   <footer>
-    Event year is the year of delisting, server shutdown or status change reported by the source.
-    Classification method: a random sample was reviewed manually; titles with free text or several sources were
-    classified by an LLM (Claude Haiku) from the source data and are not individually reviewed; the remaining titles
-    were classified by fixed rules over the source fields.
-    "Unknown" means the source data carries no evidence for that dimension; "N/A" means the dimension
-    does not apply. Data and classification are released as a research artifact.
+    <p>
+      Event year is the year of delisting, server shutdown or status change reported by the source.
+      See <a href="#methods">Classification methods</a> for how each label was assigned.
+      "Unknown" means the source data carries no evidence for that dimension; "N/A" means the dimension
+      does not apply. Data and classification are released as a research artifact.
+    </p>
   </footer>
 </main>
 
@@ -178,7 +296,7 @@
     ["D3", "Medium Completeness", "Is the game complete, or do I need major downloads?",
       { "Complete": "good", "Partial": "mid", "Key or launcher only": "bad" }],
     ["D4", "Online Dependency", "Can I play this game offline?",
-      { "None": "good", "Minor": "mid", "Launch Authentication": "bad", "Core Gameplay": "bad" }],
+      { "None": "good", "Minor": "mid", "Optional Multiplayer": "mid", "Launch Authentication": "bad", "Core Gameplay": "bad" }],
     ["D5", "Service Status", "Is there a server active to run this game?",
       { "Active": "good", "End-of-life announced": "mid", "Shut down": "bad", "N/A": "none" }],
     ["D6", "Platform Accessibility", "Does this game run on my hardware?",
@@ -227,14 +345,28 @@
   const $ = (id) => document.getElementById(id);
   $("f-source").innerHTML = `<option value="">All sources</option>` +
     Object.entries(SOURCES).map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join("");
-  $("f-dim").innerHTML = `<option value="">Any dimension</option>` +
-    DIMS.map(([id, name], i) => `<option value="${i}">${id} ${esc(name)}</option>`).join("");
-  $("f-dim").addEventListener("change", () => {
-    const i = $("f-dim").value;
-    const vals = i === "" ? [] : uniq([...Object.keys(DIMS[i][3]), "N/A", "Unknown"]);
-    $("f-val").innerHTML = `<option value="">Any value</option>` +
-      vals.map((v) => `<option>${esc(v)}</option>`).join("");
-    $("f-val").disabled = i === "";
+  // One checkbox per dimension; a checked dimension gets its own value selector.
+  $("dimopts").innerHTML = DIMS.map(([id, name, , vals], i) => `<div class="dimopt">
+      <label><input type="checkbox" data-dim="${i}"><span><b>${id}</b> ${esc(name)}</span></label>
+      <select data-dim="${i}" aria-label="${id} value" disabled><option value="">Any value</option>${
+        uniq([...Object.keys(vals), "N/A", "Unknown"]).map((v) => `<option>${esc(v)}</option>`).join("")}</select>
+    </div>`).join("");
+  const dimBoxes = [...$("dimopts").querySelectorAll("input")];
+  const dimVals = [...$("dimopts").querySelectorAll("select")];
+  const dimPicks = () => dimBoxes.filter((b) => b.checked).map((b) => [+b.dataset.dim, dimVals[b.dataset.dim].value]);
+  $("dimopts").addEventListener("change", (e) => {
+    if (e.target.type === "checkbox") {
+      const sel = dimVals[e.target.dataset.dim];
+      sel.disabled = !e.target.checked;
+      if (!e.target.checked) sel.value = "";
+    }
+    $("dim-clear").hidden = !dimBoxes.some((b) => b.checked);
+    update(true);
+  });
+  $("dim-clear").addEventListener("click", () => {
+    for (const b of dimBoxes) b.checked = false;
+    for (const v of dimVals) { v.value = ""; v.disabled = true; }
+    $("dim-clear").hidden = true;
     update(true);
   });
 
@@ -243,20 +375,24 @@
     .map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("") +
     `<span>Hover a square for its value.</span>`;
 
+  for (const td of document.querySelectorAll("td[data-m]"))
+    td.textContent = games.filter((g) => g.c?.m === td.dataset.m).length.toLocaleString();
+  if (nClassified === games.length) $("f-status").querySelector('option[value="none"]').remove();
+
   $("taxonomy").innerHTML = DIMS.map(([id, name, q, vals]) =>
-    `<tr><td>${id}</td><td>${esc(name)}</td><td>${esc(q)}</td><td>${Object.keys(vals).map(esc).join(", ")}</td></tr>`
+    `<tr><td>${id}</td><td>${esc(name)}</td><td>${esc(q)}</td><td>${Object.keys(vals).map(esc).join(", ")}, <i>Unknown</i></td></tr>`
   ).join("");
 
   $("sources-text").innerHTML = Object.values(SOURCES)
     .map((s) => `<a href="${s.url}" rel="noopener noreferrer" target="_blank">${esc(s.label)}</a>`).join(" · ");
 
   // Rendering.
-  let page = 0, filtered = games, open = null;
+  let page = 0, filtered = games, open = null, picked = new Set();
 
   function chips(g) {
     if (!g.c) return `<span class="pending">Not yet classified</span>`;
     return `<div class="chips">` + g.c.d.map((v, i) =>
-      `<span class="chip ${tone(i, v)}" title="${DIMS[i][0]} ${esc(DIMS[i][1])}: ${esc(v)}">${i + 1}</span>`
+      `<span class="chip ${tone(i, v)}${picked.size && !picked.has(i) ? " off" : ""}" title="${DIMS[i][0]} ${esc(DIMS[i][1])}: ${esc(v)}">${i + 1}</span>`
     ).join("") + `</div>`;
   }
 
@@ -271,17 +407,31 @@
                   ["Release year", r.ry], ["Event year", r.ey], ["Status", r.st]]
       .filter(([, v]) => v)
       .map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
-    return `<div class="card"><h3 style="color:var(--${r.s})">${esc(SOURCES[r.s].label)}</h3>
+    return `<div class="card"><div class="card-head"><h3 style="color:var(--${r.s})">${esc(SOURCES[r.s].label)}</h3>
+      <span class="kicker">Provenance</span></div>
       <dl>${rows}${url ? `<dt>Link</dt><dd><a href="${esc(url)}" rel="noopener noreferrer" target="_blank">${esc(new URL(url).hostname)}</a></dd>` : ""}</dl>
       ${r.x ? `<p class="excerpt">${esc(r.x)}</p>` : ""}</div>`;
   }
 
+  // Stamps summarise the most telling labels on the catalogue card.
+  function stamps(d) {
+    const out = [];
+    if (d[0] === "Unavailable") out.push(["", "Delisted"]);
+    else if (d[0] === "Regionally Limited") out.push(["warn", "Region-locked"]);
+    if (d[4] === "Shut down") out.push(["", "Servers down"]);
+    else if (d[4] === "End-of-life announced") out.push(["warn", "End of life"]);
+    if (d[5] === "Legacy Hardware") out.push(["warn", "Legacy hardware"]);
+    if (["Dev-Preserved", "Fan-Resurrected", "Fan-Preserved"].includes(d[6])) out.push(["ok", d[6]]);
+    return out.length ? `<div class="stamps">${out.map(([c, t]) => `<span class="stamp ${c}">${esc(t)}</span>`).join("")}</div>` : "";
+  }
+
   function classificationCard(g) {
-    if (!g.c) return `<div class="card"><h3>Classification</h3><p class="pending">This title has not been classified yet.</p></div>`;
+    const head = `<div class="card-head"><h3>${esc(g.name)}</h3><span class="kicker">Catalogue card</span></div>`;
+    if (!g.c) return `<div class="card catalog">${head}<p class="pending">This title has not been classified yet.</p></div>`;
     const rows = g.c.d.map((v, i) =>
-      `<tr><td>${DIMS[i][0]} ${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
+      `<tr><td><b>${DIMS[i][0]}</b>${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
     const method = { "manual review": "Manually reviewed", "LLM (Haiku)": "LLM (Claude Haiku), not reviewed", "rules": "Rules over source fields" }[g.c.m] || g.c.m;
-    return `<div class="card"><h3>Classification</h3><table class="cls-table">${rows}</table>
+    return `<div class="card catalog">${head}${stamps(g.c.d)}<table class="cls-table">${rows}</table>
       <p class="excerpt"><b>Method:</b> ${esc(method)}${g.c.conf ? ` · ${esc(g.c.conf)} confidence` : ""}</p>
       ${g.c.note ? `<p class="excerpt"><b>Annotator note:</b> ${esc(g.c.note)}</p>` : ""}
       ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}
@@ -295,7 +445,7 @@
     $("rows").innerHTML = slice.map((g) => {
       const plat = g.platforms.slice(0, 3).join(", ") + (g.platforms.length > 3 ? ` +${g.platforms.length - 3}` : "");
       const row = `<tr class="game" data-id="${esc(g.id)}" aria-expanded="${open === g.id}">
-        <td>${esc(g.name)}</td><td>${badges(g)}</td>
+        <td>${esc(g.name)}</td><td class="col-src">${badges(g)}</td>
         <td class="col-plat plat">${esc(plat)}</td><td class="col-year num">${g.event ?? "—"}</td>
         <td>${chips(g)}</td></tr>`;
       const detail = open === g.id
@@ -312,12 +462,13 @@
   function update(resetPage) {
     const q = $("q").value.trim().toLowerCase();
     const src = $("f-source").value, status = $("f-status").value;
-    const dim = $("f-dim").value, val = $("f-val").value;
+    const picks = dimPicks();
+    picked = new Set(picks.map(([i]) => i));
     filtered = games.filter((g) =>
       (!q || g.text.includes(q)) &&
       (!src || g.sources.includes(src)) &&
       (!status || (status === "none" ? !g.c : g.c?.m === status)) &&
-      (dim === "" || (g.c && (!val || g.c.d[dim] === val))));
+      (!picks.length || (g.c && picks.every(([i, v]) => !v || g.c.d[i] === v))));
     const sort = $("f-sort").value;
     const byTitle = (a, b) => a.name.localeCompare(b.name);
     const cmp = {
@@ -333,7 +484,7 @@
 
   let timer;
   $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => update(true), 150); });
-  for (const id of ["f-source", "f-status", "f-val", "f-sort"]) $(id).addEventListener("change", () => update(true));
+  for (const id of ["f-source", "f-status", "f-sort"]) $(id).addEventListener("change", () => update(true));
   $("prev").addEventListener("click", () => { page--; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
   $("next").addEventListener("click", () => { page++; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
   $("rows").addEventListener("click", (e) => {
