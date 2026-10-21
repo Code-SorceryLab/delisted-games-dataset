@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SKVG Pipeline Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+:root {
+  --paper: #fbfbfa;
+  --sheet: #ffffff;
+  --ink: #111418;
+  --muted: #5f6670;
+  --rule: #d9dcdf;
+  --accent: #2458b3;
+  --accent-tint: #e9eff9;
+  --gap: #b23a22;
+  --gap-tint: #fbebe6;
+  --code-bg: #f0f1f2;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+    --accent: #86acef; --accent-tint: #1d2738; --gap: #ef8a71; --gap-tint: #2e1d18; --code-bg: #22262b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+  --accent: #86acef; --accent-tint: #1d2738; --gap: #ef8a71; --gap-tint: #2e1d18; --code-bg: #22262b;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); padding-inline: 20px; padding-block: 28px 64px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px; }
+h1, h2 { font-family: var(--serif); font-weight: 600; margin: 0; line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.35rem; }
+
+figure { margin: 0; background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 18px 18px 14px; display: grid; gap: 10px; }
+.fig-scroll { overflow-x: auto; }
+.fig-scroll svg { display: block; width: 100%; min-width: 940px; height: auto; color: var(--ink); }
+figcaption { font-size: 0.92rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; }
+figcaption b { color: var(--ink); font-weight: 600; }
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.key svg { width: 18px; height: 18px; color: var(--ink); }
+.key.gap svg { color: var(--gap); }
+
+svg text { font-family: var(--sans); fill: currentColor; pointer-events: none; }
+svg .lbl { font-size: 13px; font-weight: 600; }
+svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+.gapnode .sub { fill: var(--gap); }
+.edge { fill: none; stroke: currentColor; stroke-width: 1.4; transition: stroke .15s; }
+.edge.gap { stroke: var(--gap); stroke-dasharray: 4 3; }
+.edge.on { stroke: var(--accent); stroke-width: 2.2; }
+.edge.gap.on { stroke: var(--gap); }
+.dot, .ah { fill: currentColor; }
+.ah.gap { fill: var(--gap); }
+.ah.on { fill: var(--accent); }
+
+.hl { fill: transparent; stroke: transparent; stroke-width: 1.4; pointer-events: none; transition: fill .15s, stroke .15s; }
+.hl.hover { fill: var(--paper); stroke: var(--rule); }
+.hl.sel { fill: var(--accent-tint); stroke: var(--accent); }
+.hl.gap.sel { fill: var(--gap-tint); stroke: var(--gap); }
+.node { cursor: pointer; outline: none; }
+.node .hit { fill: transparent; }
+.gapnode { color: var(--gap); }
+
+.detail { display: grid; gap: 14px; min-width: 0; }
+.dhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.kind { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.boxes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .boxes { grid-template-columns: 1fr; } }
+.box { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.box.wide { grid-column: 1 / -1; }
+.box.alert { border-color: var(--gap); background: var(--gap-tint); }
+.box-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.box.alert .box-label { color: var(--gap); }
+.box p { margin: 0; font-size: 0.95rem; max-width: 75ch; }
+.box ul { margin: 0; padding-left: 1.1em; display: grid; gap: 5px; font-size: 0.95rem; }
+.box li::marker { color: var(--muted); }
+.none { color: var(--muted); }
+.ref { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ref:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.rule { border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.rule.full { grid-column: 1 / -1; }
+.rt { font-weight: 600; font-size: 1rem; }
+.ex { overflow-x: auto; }
+.ex table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+.ex th { text-align: left; font-weight: 600; font-size: 0.76rem; letter-spacing: 0.04em; color: var(--muted); padding: 4px 12px 4px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.ex td { padding: 5px 12px 5px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.ex tr:last-child td { border-bottom: 0; }
+.ex .mono { font-family: var(--mono); font-size: 0.8rem; }
+.ex .arrow { color: var(--muted); }
+.ex .bad { color: var(--gap); }
+
+@media (prefers-reduced-motion: reduce) { .edge, .hl { transition: none; } }
+</style>
+
+<div class="wrap">
+  <h1>SKVG Pipeline Map</h1>
+
+  <figure>
+    <div class="fig-scroll">
+    <svg viewBox="0 0 1270 520" role="group" aria-label="SKVG data pipeline. Four websites feed data collection, which produces the raw data. Unify and filter turns it into the unified dataset and summary stats. The unified dataset feeds IGDB enrichment, the DoesItPlay overlap and the historical analysis. IGDB release counts feed the historical analysis. The unified dataset, IGDB genres and the Delisted Games raw file feed the delisting-cause analysis, which uses local LLMs on the Delisted Games narratives.">
+      <defs>
+        <symbol id="i-db" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M6,8 V28 A12,4 0 0 0 30,28 V8" style="fill:var(--sheet)"/><ellipse cx="18" cy="8" rx="12" ry="4" style="fill:var(--sheet)"/><path d="M6,14.7 A12,4 0 0 0 30,14.7 M6,21.3 A12,4 0 0 0 30,21.3"/></g></symbol>
+        <symbol id="i-doc" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9,3 H22 L28,9 V33 H9 Z" style="fill:var(--sheet)"/><path d="M22,3 V9 H28"/><path d="M13,16 H24 M13,21 H24 M13,26 H20" stroke-width="1.6"/></g></symbol>
+        <symbol id="i-docs" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12,1 H24 L30,7 V28" /><path d="M7,6 H19 L25,12 V34 H7 Z" style="fill:var(--sheet)"/><path d="M19,6 V12 H25"/><path d="M11,18 H21 M11,23 H21 M11,28 H17" stroke-width="1.6"/></g></symbol>
+        <symbol id="i-fig" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12,1 H24 L30,7 V28"/><path d="M7,6 H19 L25,12 V34 H7 Z" style="fill:var(--sheet)"/><path d="M11,29 V24 M15,29 V19 M19,29 V22" stroke-width="2.4"/></g></symbol>
+        <symbol id="p-collect" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18,8 V20 M13,15 L18,20 L23,15 M10,23 V27 H26 V23"/></g></symbol>
+        <symbol id="p-filter" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><path d="M9,10 H27 L20.5,18.5 V26 L15.5,28 V18.5 Z" style="fill:var(--sheet)"/></symbol>
+        <symbol id="p-search" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="6"/><path d="M20.5,20.5 L26,26"/></g></symbol>
+        <symbol id="p-overlap" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.2"><circle cx="14.5" cy="18" r="6.5"/><circle cx="21.5" cy="18" r="6.5"/></g></symbol>
+        <symbol id="p-trend" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9,25 L14,18 L19,21 L27,11"/><path d="M9,28 H27" stroke-width="1.6"/></g></symbol>
+        <symbol id="p-genre" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" style="fill:var(--gap-tint)" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M10,10 H18 L26,18 L18,26 L10,18 Z"/><circle cx="14" cy="14" r="1.4" fill="currentColor"/></g></symbol>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="ah-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah on" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="ah-gap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah gap" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+
+      <g id="hls"></g>
+
+      <g id="edges">
+        <path class="edge" data-n="src_dead collect" d="M78,85 H130 V190"/>
+        <path class="edge" data-n="src_steam collect" d="M78,295 H130 V190"/>
+        <path class="edge" data-n="src_dip collect" d="M78,190 H130"/>
+        <path class="edge arrow" data-n="src_dead src_dip src_steam src_delisted collect" d="M130,190 H170"/>
+        <path class="edge" data-n="src_delisted collect" d="M78,400 H130 V190"/>
+        <path class="edge arrow" data-n="collect raw" d="M208,190 H290"/>
+        <path class="edge" data-n="raw unify causes" d="M328,190 H370"/>
+        <path class="edge arrow" data-n="raw unify" d="M370,190 H410"/>
+        <path class="edge" data-n="raw causes" d="M370,190 V410 H625"/>
+        <path class="edge" data-n="unify unified stats" d="M448,190 H495"/>
+        <path class="edge arrow" data-n="unify unified" d="M495,190 H540"/>
+        <path class="edge arrow" data-n="unify stats" d="M495,190 V330 H540"/>
+        <path class="edge" data-n="unified igdb rq2 rq3" d="M578,190 H625"/>
+        <path class="edge arrow" data-n="unified igdb" d="M625,190 V70 H680"/>
+        <path class="edge arrow" data-n="unified rq3" d="M625,190 H1010"/>
+        <path class="edge arrow" data-n="unified rq2" d="M625,190 V310 H680"/>
+        <path class="edge" data-n="igdb igdb_genres igdb_years" d="M718,70 H770"/>
+        <path class="edge arrow" data-n="igdb igdb_genres" d="M770,70 V125 H820"/>
+        <path class="edge arrow" data-n="igdb igdb_years" d="M770,70 V40 H820"/>
+        <path class="edge arrow" data-n="igdb_years rq3" d="M858,40 H1030 V170"/>
+        <path class="edge arrow" data-n="rq2 overlap" d="M718,310 H820"/>
+        <path class="edge" data-n="rq3 rq3_tables rq3_figs" d="M1048,190 H1145"/>
+        <path class="edge arrow" data-n="rq3 rq3_tables" d="M1145,190 V150 H1185"/>
+        <path class="edge arrow" data-n="rq3 rq3_figs" d="M1145,190 V245 H1185"/>
+        <path class="edge" data-n="unified causes" d="M625,190 V410"/>
+        <path class="edge" data-n="unified raw causes" d="M625,410 H930"/>
+        <path class="edge" data-n="igdb_genres causes" d="M858,125 H930 V410"/>
+        <path class="edge arrow" data-n="unified igdb_genres raw causes" d="M930,410 H1010"/>
+        <path class="edge" data-n="causes causes_tables causes_figs" d="M1048,410 H1145"/>
+        <path class="edge arrow" data-n="causes causes_tables" d="M1145,410 V370 H1185"/>
+        <path class="edge arrow" data-n="causes causes_figs" d="M1145,410 V455 H1185"/>
+        <circle class="dot" cx="130" cy="190" r="2.6"/>
+        <circle class="dot" cx="370" cy="190" r="2.6"/>
+        <circle class="dot" cx="495" cy="190" r="2.6"/>
+        <circle class="dot" cx="625" cy="190" r="2.6"/>
+        <circle class="dot" cx="770" cy="70" r="2.6"/>
+        <circle class="dot" cx="1145" cy="190" r="2.6"/>
+        <circle class="dot" cx="625" cy="310" r="2.6"/>
+        <circle class="dot" cx="930" cy="410" r="2.6"/>
+        <circle class="dot" cx="1145" cy="410" r="2.6"/>
+        <circle class="dot" cx="625" cy="410" r="2.6"/>
+      </g>
+
+      <g id="nodes"></g>
+    </svg>
+    </div>
+    <figcaption>
+      <span><b>Figure 1.</b> SKVG data pipeline.</span>
+      <span class="key"><svg viewBox="0 0 36 36"><use href="#i-doc"/></svg>data</span>
+      <span class="key"><svg viewBox="0 0 36 36"><use href="#p-filter"/></svg>processing step</span>
+    </figcaption>
+  </figure>
+
+  <section class="detail" id="detail" aria-live="polite"></section>
+</div>
+
+<script>
+
+const SAME = "A row from one source and a row from another are treated as the same game only if their simplified titles are identical (see Unify & filter).";
+
+const NODES = {
+  src_dead: { kind: "data", icon: "i-db", x: 60, y: 85, name: "Dead Game List", sub: "website",
+    producedBy: ["Stop Killing Games wiki"], readBy: ["@collect"], issues: [] },
+  src_dip: { kind: "data", icon: "i-db", x: 60, y: 190, name: "DoesItPlay", sub: "website",
+    producedBy: ["DoesItPlay website"], readBy: ["@collect"], issues: [] },
+  src_steam: { kind: "data", icon: "i-db", x: 60, y: 295, name: "Steam Tracker", sub: "website",
+    producedBy: ["Steam Tracker website"], readBy: ["@collect"], issues: [] },
+  src_delisted: { kind: "data", icon: "i-db", x: 60, y: 400, name: "Delisted Games", sub: "website",
+    producedBy: ["Delisted Games website"], readBy: ["@collect"], issues: [] },
+
+  collect: { kind: "process", icon: "p-collect", x: 190, y: 190, name: "Data collection",
+    inputs: ["@src_dead", "@src_dip", "@src_steam", "@src_delisted"],
+    outputs: ["@raw"],
+    filters: [
+      { t: "Broken table rows are skipped",
+        d: "A row is not saved if its number of cells doesn't fit the table.",
+        ex: { head: ["Source", "Row skipped when"], rows: [
+          ["Dead Game List", "cell count ≠ number of columns"],
+          ["Steam Tracker", "cell count ≠ number of columns"],
+          ["DoesItPlay", "fewer than 8 cells"]] } },
+      { t: "Duplicate DoesItPlay tests are removed",
+        d: "If two rows have the same game, platform, version, region, test device, offline play and download required, only one is kept." }
+    ],
+    decisions: [
+      { t: "Website tables are saved as they are",
+        d: "Dead Game List and Steam Tracker keep every column of the website table, unchanged. Links are saved as URLs, not as link text." },
+      { t: "One DoesItPlay row per test",
+        d: "A game tested on several platforms, versions, regions or devices gets one row per test." },
+      { t: "Steam Tracker keeps every app type",
+        d: "Unreleased apps and test apps are saved too. They are removed later, in @unify." },
+      { t: "Delisted Games: one entry per game page",
+        d: "The site's per-platform lists (PC, Steam, GOG, Epic, Microsoft Store, Nintendo, PlayStation, Stadia) are walked in turn, and each game's page is saved: its release and delisting dates, developer, publisher, where it is still available, source links and the full narrative text." },
+      { t: "Delisted Games listed once per game",
+        d: "A game that appears in several platform lists is saved only once, under the first list it was found in. The other platforms stay visible in its dates and availability text." }
+    ],
+    issues: [] },
+
+  raw: { kind: "data", icon: "i-docs", x: 310, y: 190, name: "Raw data", sub: "4 JSON",
+    producedBy: ["@collect"], readBy: ["@unify", "@causes"], issues: [] },
+
+  unify: { kind: "process", icon: "p-filter", x: 430, y: 190, name: "Unify & filter",
+    inputs: ["@raw"],
+    outputs: ["@unified", "@stats"],
+    filters: [
+      { t: "Non-games are removed", full: true,
+        d: "A row is removed if any of these is true. The keyword rule applies to every source.",
+        ex: { head: ["Removed when", "Example"], rows: [
+          ["Steam Tracker type is Unreleased or Test app", "<span class='mono'>Project Lucie</span> (Test app)"],
+          ["Title contains beta, demo, test server, playtest, soundtrack or dlc", "<span class='mono'>BattleTech - Backer Beta</span>, <span class='mono'>Dirty Bomb [Private Test Server]</span>"],
+          ["Title has no letters or numbers", "<span class='mono'>**</span>, <span class='mono'>#</span>"]] } }
+    ],
+    decisions: [
+      { t: "Matching games across sources", full: true,
+        d: "To match the same game across sources, every title is simplified: lower case, ™ ® © removed, text in round brackets removed, “[RELISTED]” removed, punctuation removed. Two rows are the same game only if their simplified titles are identical. Every later step matches games this way.",
+        ex: { head: ["Original title", "", "Simplified title"], rows: [
+          ["2006 FIFA World Cup (Online Services)", "→", "2006 fifa world cup"],
+          ["Alice: Madness Returns [RELISTED]", "→", "alice madness returns"],
+          ["Rumble Fighter [North America]", "→", "rumble fighter north america"],
+          ["HITMAN™ 2", "→", "hitman 2"]], mono: [0, 2] } },
+      { t: "What counts as delisted or shut down", full: true,
+        d: "Each source labels its games differently. Every row stays in the dataset; this only decides which rows are marked as delisted or shut down.",
+        ex: { head: ["Source", "Marked as delisted / shut down", "Kept, but not marked"], rows: [
+          ["Dead Game List", "Dead, Fan-Resurrected, Fan-Preserved, Dev-Preserved", "At Risk"],
+          ["Delisted Games", "every game", "—"],
+          ["Steam Tracker", "Delisted, Purchase disabled, F2P (unavailable), Retail only", "Pre-order exclusive"],
+          ["DoesItPlay", "—", "every game (it has no delisting information)"]] } },
+      { t: "Year of the event",
+        d: "The first year written in the source's date column. If several dates are listed, the earliest one is used.",
+        ex: { head: ["Source", "Column", "Example"], rows: [
+          ["Dead Game List", "Death date", "2014-05-31 → 2014"],
+          ["Delisted Games", "delisting", "Mar 2023 (Wii U) … Jun 2025 (Steam) → 2023"],
+          ["Steam Tracker", "Changed", "12/2024 → 2024"],
+          ["DoesItPlay", "—", "no year"]] } },
+      { t: "Offline play and download as yes/no",
+        d: "DoesItPlay’s “Yes” and “Yes*” become yes; “No” and “No*” become no." }
+    ],
+    issues: [] },
+
+  unified: { kind: "data", icon: "i-doc", x: 560, y: 190, name: "Unified dataset", sub: "1 CSV",
+    producedBy: ["@unify"], readBy: ["@igdb", "@rq2", "@rq3", "@causes"], issues: [] },
+  stats: { kind: "data", icon: "i-docs", x: 560, y: 330, name: "Summary stats", sub: "3 CSV",
+    producedBy: ["@unify"], readBy: [], issues: [] },
+
+  igdb: { kind: "process", icon: "p-search", x: 700, y: 70, name: "IGDB enrichment",
+    inputs: ["@unified", "IGDB genre list", "IGDB website API"],
+    outputs: ["@igdb_genres", "@igdb_years"],
+    filters: [
+      { t: "Genres only for exact matches",
+        d: "A game gets genres only if IGDB has a game with the same simplified title. Similar titles are not accepted." },
+      { t: "Only full games counted per year",
+        d: "Yearly release counts include main games, remakes, remasters, expanded games and ports. DLC, expansions, bundles, mods, episodes, seasons, packs and updates are not counted." }
+    ],
+    decisions: [
+      { t: "Each game is searched once",
+        d: "Every distinct simplified title from the four sources is searched on IGDB by its original name. If that finds no exact match, it is searched again by its simplified title." },
+      { t: "Which years are counted",
+        d: "From the earliest to the latest event year in the unified dataset, up to the current year." }
+    ],
+    issues: [] },
+  igdb_genres: { kind: "data", icon: "i-doc", x: 840, y: 125, name: "IGDB genres", sub: "1 CSV",
+    producedBy: ["@igdb"], readBy: ["@causes"], issues: [] },
+  igdb_years: { kind: "data", icon: "i-doc", x: 840, y: 40, name: "IGDB releases", sub: "1 CSV",
+    producedBy: ["@igdb"], readBy: ["@rq3"], issues: [] },
+
+  rq2: { kind: "process", icon: "p-overlap", x: 700, y: 310, name: "DoesItPlay overlap",
+    inputs: ["@unified"],
+    outputs: ["@overlap"],
+    filters: [
+      { t: "Only delisted or shut-down games",
+        d: "At Risk games (Dead Game List) and Pre-order exclusive apps (Steam Tracker) are left out, because they haven't been delisted or shut down." }
+    ],
+    decisions: [
+      { t: "Matched to DoesItPlay by title", d: SAME + " Each source is matched to DoesItPlay separately." },
+      { t: "One row per pair", d: "A game with several DoesItPlay tests appears once for each test." }
+    ],
+    issues: [] },
+  overlap: { kind: "data", icon: "i-docs", x: 840, y: 310, name: "Overlap tables", sub: "4 CSV",
+    producedBy: ["@rq2"], readBy: [], issues: [] },
+
+  rq3: { kind: "process", icon: "p-trend", x: 1030, y: 190, name: "Historical analysis",
+    inputs: ["@unified", "@igdb_years"],
+    outputs: ["@rq3_tables", "@rq3_figs"],
+    filters: [
+      { t: "Only delisted or shut-down games", d: "At Risk games (Dead Game List) and Pre-order exclusive apps (Steam Tracker) are left out, because they haven't been delisted or shut down." },
+      { t: "No future dates", d: "Events dated after the current year are left out. Events with no year are left out of the yearly charts." },
+      { t: "Only complete years per year", d: "The yearly charts, tables and correlation tests stop at 2025, the last year the data snapshots fully cover. 2026 is still in progress, so it is left out." }
+    ],
+    decisions: [
+      { t: "Games are counted, not rows",
+        d: "Each year counts distinct games. A game listed in several sources in the same year counts once in the total." },
+      { t: "Correlation with IGDB releases",
+        d: "Pearson and Spearman correlation between delisting events per year and IGDB releases per year. Tested twice: on the yearly numbers, and on the change from one year to the next. Significance level 0.05." },
+      { t: "Overlap with DoesItPlay", d: SAME },
+      { t: "Offline and download indicators",
+        d: "For each overlapping game, two yes/no indicators.",
+        ex: { head: ["Indicator", "Yes when"], rows: [
+          ["Can't play offline", "at least one of its DoesItPlay tests says offline play = No"],
+          ["Needs a download", "at least one of its DoesItPlay tests says download required = Yes"]] } }
+    ],
+    issues: [] },
+  rq3_tables: { kind: "data", icon: "i-docs", x: 1205, y: 150, name: "Historical tables", sub: "9 CSV",
+    producedBy: ["@rq3"], readBy: [], issues: [] },
+  rq3_figs: { kind: "data", icon: "i-fig", x: 1205, y: 245, name: "Historical figures", sub: "7 PNG",
+    producedBy: ["@rq3"], readBy: [], issues: [] },
+  causes: { kind: "process", icon: "p-search", x: 1030, y: 410, name: "Delisting causes",
+    inputs: [
+      "@unified (the 2,123 Delisted Games entries and their simplified titles)",
+      "@raw (Delisted Games narratives and dates)",
+      "@igdb_genres",
+      "Two local LLMs through Ollama"
+    ],
+    outputs: ["@causes_tables", "@causes_figs"],
+    filters: [
+      { t: "Only Delisted Games entries kept by Unify & filter",
+        d: "The 2,123 Delisted Games rows of the unified dataset. Every entry was delisted, so causes are compared within delisted games, not against a control group." },
+      { t: "Narratives cleaned before the LLM reads them",
+        d: "The site boilerplate, the “Thanks to …” footer and blocks of store-page marketing copy (feature lists, unattributed quoted blurbs) are removed. Marketing copy that is not caught stays in, and the prompt says to ignore it." },
+      { t: "Genres only for exact matches", d: "Genre results use only entries whose simplified title has an exact IGDB match with genres." },
+      { t: "Only complete years per year", d: "The per-year chart stops at 2025." }
+    ],
+    decisions: [
+      { t: "Five fixed causes, multi-label",
+        d: "Licensing, IP change, server shutdown, store closure and publisher exit, counted only when the narrative states them. Anything else is “other reason” or “not stated”. This is not an exhaustive taxonomy. One entry can have several causes, so shares can add up to more than 100%." },
+      { t: "Two local models, verbatim quotes",
+        d: "A Qwen and a Gemma model answer with a fixed JSON schema, temperature 0 and a fixed seed. Every cause needs a quote, which must be found in the narrative (fuzzy match ≥ 95); a cause without a matching quote counts as false. Model tag, digest and prompt hash are stored with each answer." },
+      { t: "Final labels",
+        d: "The primary model’s verified labels. Causes that both models flag are reported as a robustness check, with Cohen’s kappa per cause." },
+      { t: "Age at delisting",
+        d: "Earliest delisting date minus earliest digital release date, to the month where both are given. Year-only dates are placed mid-year." },
+      { t: "Tests",
+        d: "Fisher’s exact test (genre × cause, relisting × cause) and Mann–Whitney / Kolmogorov–Smirnov (age), with Benjamini–Hochberg correction." }
+    ],
+    issues: [
+      "Causes are as reported by volunteers or publishers, not verified."
+    ] },
+  causes_tables: { kind: "data", icon: "i-docs", x: 1205, y: 370, name: "Cause tables", sub: "CSV, JSONL",
+    producedBy: ["@causes"], readBy: [], issues: [] },
+  causes_figs: { kind: "data", icon: "i-fig", x: 1205, y: 455, name: "Cause figures", sub: "6 PNG",
+    producedBy: ["@causes"], readBy: [], issues: [] }
+};
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const nodeLayer = document.getElementById("nodes");
+const hlLayer = document.getElementById("hls");
+const edges = [...document.querySelectorAll("#edges .edge")];
+const hl = {};
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+for (const [id, n] of Object.entries(NODES)) {
+  const g = el("g", { class: "node" + (n.gap ? " gapnode" : ""), "data-id": id, tabindex: 0, role: "button", "aria-label": n.name }, nodeLayer);
+  el("use", { href: "#" + n.icon, x: n.x - 18, y: n.y - 18, width: 36, height: 36 }, g);
+  el("text", { class: "lbl", x: n.x, y: n.y + 34, "text-anchor": "middle" }, g).textContent = n.name;
+  if (n.sub) el("text", { class: "sub", x: n.x, y: n.y + 47, "text-anchor": "middle" }, g).textContent = n.sub;
+  hl[id] = el("rect", { class: "hl" + (n.gap ? " gap" : ""), rx: 5 }, hlLayer);
+  g.addEventListener("click", () => select(id));
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); } });
+  g.addEventListener("mouseenter", () => hl[id].classList.add("hover"));
+  g.addEventListener("mouseleave", () => hl[id].classList.remove("hover"));
+  g.addEventListener("focus", () => hl[id].classList.add("hover"));
+  g.addEventListener("blur", () => hl[id].classList.remove("hover"));
+}
+
+function fitBoxes() {
+  document.querySelectorAll(".node").forEach(g => {
+    g.querySelector(".hit")?.remove();
+    const b = g.getBBox();
+    const box = { x: b.x - 8, y: b.y - 6, width: b.width + 16, height: b.height + 12 };
+    for (const k in box) hl[g.dataset.id].setAttribute(k, box[k]);
+    g.insertBefore(el("rect", { class: "hit", ...box }), g.firstChild);
+  });
+}
+fitBoxes();
+if (document.fonts) document.fonts.ready.then(fitBoxes);
+
+function setMarkers() {
+  edges.forEach(p => {
+    if (!p.classList.contains("arrow")) return;
+    const m = p.classList.contains("gap") ? "ah-gap" : p.classList.contains("on") ? "ah-on" : "ah";
+    p.setAttribute("marker-end", `url(#${m})`);
+  });
+}
+
+const detail = document.getElementById("detail");
+const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const linkify = s => s.replace(/@(\w+)/g, (m, id) => NODES[id] ? `<button class="ref" data-go="${id}">${esc(NODES[id].name)}</button>` : m);
+const list = items => items.length ? `<ul>${items.map(i => `<li>${linkify(i)}</li>`).join("")}</ul>` : `<p class="none">None</p>`;
+const box = (label, body, cls = "") => `<div class="box ${cls}"><span class="box-label">${label}</span>${body}</div>`;
+
+function exTable(ex) {
+  const mono = ex.mono || [];
+  return `<div class="ex"><table>
+    <thead><tr>${ex.head.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+    <tbody>${ex.rows.map(r => `<tr>${r.map((c, i) => `<td class="${mono.includes(i) ? "mono" : ""} ${c === "→" ? "arrow" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+const rules = items => items.length
+  ? `<div class="rules">${items.map(r => `<div class="rule ${r.full ? "full" : ""}"><div class="rt">${r.t}</div>${r.d ? `<p>${linkify(r.d)}</p>` : ""}${r.ex ? exTable(r.ex) : ""}</div>`).join("")}</div>`
+  : `<p class="none">None</p>`;
+
+
+function render(id) {
+  const n = NODES[id];
+  const alert = n.issues.length ? " alert" : "";
+  const body = n.kind === "process" ? `
+      ${box("Inputs", list(n.inputs))}
+      ${box("Outputs", list(n.outputs))}
+      ${box("Filters", rules(n.filters), "wide")}
+      ${box("Decisions", rules(n.decisions), "wide")}
+      ${box("Issues", list(n.issues), "wide" + alert)}` : `
+      ${box("Produced by", list(n.producedBy))}
+      ${box("Read by", list(n.readBy))}
+      ${box("Issues", list(n.issues), "wide" + alert)}`;
+  detail.innerHTML = `
+    <div class="dhead"><h2>${esc(n.name)}</h2><span class="kind">${n.kind === "process" ? "processing step" : "data"}</span></div>
+    <div class="boxes">${body}</div>`;
+}
+
+function select(id) {
+  if (!NODES[id]) return;
+  document.querySelectorAll(".node").forEach(g => g.setAttribute("aria-pressed", g.dataset.id === id));
+  for (const k in hl) hl[k].classList.toggle("sel", k === id);
+  edges.forEach(p => p.classList.toggle("on", p.dataset.n.split(" ").includes(id)));
+  setMarkers();
+  render(id);
+  if (location.hash.slice(1) !== id) history.replaceState(null, "", "#" + id);
+}
+
+detail.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]");
+  if (b) select(b.dataset.go);
+});
+
+select(NODES[location.hash.slice(1)] ? location.hash.slice(1) : "unify");
+</script>

@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delisted Games Dataset</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  /* Same palette, type and panels as the pipeline map. */
+  :root {
+    --paper: #fbfbfa; --sheet: #ffffff; --ink: #111418; --muted: #5f6670; --rule: #d9dcdf;
+    --accent: #2458b3; --accent-tint: #e9eff9; --code-bg: #f0f1f2;
+    --good: #2f7d4f; --mid: #b26b00; --bad: #b23a22; --none: #dcdfe2;
+    --steam_tracker: #2d4a6b; --doesitplay: #5b4a87;
+    --delisted_games: #86561a; --dead_game_list: #9b2c3a;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Source Code Pro", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+      --accent: #86acef; --accent-tint: #1d2738; --code-bg: #22262b;
+      --good: #7cc596; --mid: #e0a85a; --bad: #ef8a71; --none: #3a3f46;
+      --steam_tracker: #9cb8d8; --doesitplay: #bcaee6;
+      --delisted_games: #e2b56f; --dead_game_list: #f0a0ab;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+    --accent: #86acef; --accent-tint: #1d2738; --code-bg: #22262b;
+    --good: #7cc596; --mid: #e0a85a; --bad: #ef8a71; --none: #3a3f46;
+    --steam_tracker: #9cb8d8; --doesitplay: #bcaee6;
+    --delisted_games: #e2b56f; --dead_game_list: #f0a0ab;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); padding-inline: 20px; padding-block: 28px 64px; }
+  main { max-width: 1240px; margin: 0 auto; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+  h1 { font-size: 1.8rem; margin: 0 0 22px; }
+  h2 { font-size: 1.35rem; margin: 44px 0 12px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  /* Numbers bar. */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); overflow: hidden;
+           border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); margin-bottom: 22px; }
+  .stat { padding: 10px 14px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 0 -1px -1px 0; }
+  .stat b { display: block; font: 600 1.45rem/1.2 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+  .stat > span { display: block; line-height: 1.3; font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .stat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .stat-head .ico { color: var(--muted); opacity: .8; }
+  .box-label { font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+  /* Quiet toolbar: controls read as text until hovered or focused. */
+  /* Filters: one family of small rounded controls. */
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; margin-bottom: 12px; }
+  .search { position: relative; flex: 1 1 260px; display: flex; color: var(--muted); }
+  .search svg { position: absolute; left: 11px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); pointer-events: none; }
+  .filters .search input { flex: 1; min-width: 0; padding-left: 32px; cursor: text; }
+  .filters input, .pill {
+    font: inherit; height: 32px; color: var(--ink); background-color: var(--sheet); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 0 14px; min-width: 0; max-width: 100%; }
+  .filters input::placeholder { color: var(--muted); }
+  .pill { appearance: none; -webkit-appearance: none; cursor: pointer; color: var(--muted); padding-right: 28px; flex: none;
+          background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+          background-position: calc(100% - 16px) 55%, calc(100% - 12px) 55%; background-size: 4px 4px; background-repeat: no-repeat; }
+  .pill-measure { position: absolute; visibility: hidden; white-space: pre; }
+  .pill:hover { color: var(--ink); border-color: var(--muted); }
+  .pill.on { color: var(--accent); background-color: var(--accent-tint); border-color: var(--accent); }
+  .filters input:focus-visible, .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  /* Dimension filter: tick a dimension, then pick its value. */
+  .dimfilter { border: 1px solid var(--rule); border-radius: 4px; background: var(--sheet); margin: 0 0 18px; padding: 8px 12px 12px; min-width: 0; }
+  .dimfilter legend { padding: 0 6px; display: flex; gap: 10px; align-items: center; }
+  .dimfilter legend button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--accent);
+                             background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+  .dimopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+  .dimopt { display: grid; gap: 4px; align-content: start; min-width: 0; }
+  .dimopt label { display: flex; gap: 6px; align-items: baseline; font-size: .86rem; cursor: pointer; }
+  .dimopt label b { font-family: var(--mono); font-size: .74rem; font-weight: 500; color: var(--accent); }
+  .dimopt label .ico { color: var(--accent); margin-right: 4px; }
+  .dimopt input { accent-color: var(--accent); margin: 0; align-self: center; }
+  .dimopt select { font: inherit; font-size: .82rem; padding: 3px 6px; border: 1px solid var(--rule); border-radius: 4px;
+                   background: var(--sheet); color: var(--ink); width: 100%; }
+  .dimopt select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dimopt select:disabled { display: none; }
+  .chip.off { opacity: .22; }
+  .count { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+  .above-table { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 24px; margin-bottom: 8px; }
+
+  /* Legend for the D1–D7 squares. */
+  .key { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 14px; font-size: .78rem; color: var(--muted); margin-left: auto; }
+  .key span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .key i { width: 9px; height: 9px; border-radius: 2px; }
+
+  /* Register table. */
+  .table-wrap { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--code-bg); font-size: .76rem; font-weight: 600; letter-spacing: .04em; color: var(--muted); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.game { cursor: pointer; }
+  tr.game:hover { background: var(--paper); }
+  tr.game[aria-expanded="true"] { background: var(--accent-tint); box-shadow: inset 3px 0 0 var(--accent); }
+  tr.game td:first-child { font-weight: 600; }
+  td.num { font-family: var(--mono); font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .plat { color: var(--muted); font-size: .9rem; }
+
+  .badge { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 500; letter-spacing: .04em;
+           text-transform: uppercase; padding: 1px 6px; margin: 1px 3px 1px 0;
+           border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+  .chips { display: flex; gap: 3px; }
+  .chip { width: 20px; height: 20px; border-radius: 3px; font: 600 .68rem/1 var(--mono); color: #fff;
+          display: inline-grid; place-items: center; flex: none; }
+  .chip.good { background: var(--good); } .chip.mid { background: var(--mid); }
+  .chip.bad { background: var(--bad); } .chip.none { background: var(--none); color: var(--muted); }
+  :root[data-theme="dark"] .chip:is(.good, .mid, .bad) { color: #121417; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip:is(.good, .mid, .bad) { color: #121417; } }
+  .pending { color: var(--muted); font-size: .85rem; font-style: italic; }
+
+  /* Catalogue cards. */
+  tr.detail > td { background: var(--paper); padding: 16px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+  .card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; min-width: 0; }
+  .card.catalog { border-color: var(--accent); }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;
+               border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  .card h3 { font-size: 1rem; margin: 0; }
+  .card dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; font-size: .9rem; }
+  .card dt { font-family: var(--mono); font-size: .76rem; color: var(--muted); padding-top: 2px; }
+  .card dd { margin: 0; overflow-wrap: anywhere; }
+  .card .excerpt { font-size: .88rem; color: var(--muted); margin: 8px 0 0; }
+  .card .excerpt b { color: var(--ink); font-weight: 600; }
+  .cls-table { width: 100%; }
+  .cls-table td { padding: 5px 8px 5px 0; font-size: .9rem; border-bottom: 1px solid var(--rule); line-height: 1.35; }
+  .cls-table tr:last-child td { border-bottom: 0; }
+  .cls-table td:first-child { color: var(--muted); width: 48%; }
+  .cls-table td:first-child b { font-family: var(--mono); font-size: .76rem; font-weight: 500; color: var(--accent); margin-right: 4px; }
+  .val { font-weight: 600; }
+  .val.good { color: var(--good); } .val.mid { color: var(--mid); } .val.bad { color: var(--bad); }
+  .val.none { color: var(--muted); font-weight: 400; }
+
+  /* Status tags on the catalogue card. */
+  .stamps { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .stamp { display: inline-block; font: 500 .7rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+           padding: 4px 7px 3px; border: 1px solid currentColor; border-radius: 3px; color: var(--bad); }
+  .stamp.ok { color: var(--good); }
+  .stamp.warn { color: var(--mid); }
+
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 12px;
+           font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+  .pager button { font: inherit; color: var(--ink); padding: 5px 12px; border-radius: 4px; border: 1px solid var(--rule);
+                  background: var(--sheet); cursor: pointer; }
+  .pager button:hover:not(:disabled) { border-color: var(--accent); }
+  .pager button:disabled { opacity: .4; cursor: default; }
+
+  .tax-wrap { overflow-x: auto; background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; }
+  .taxonomy td { font-size: .92rem; }
+  .taxonomy td:first-child { font-family: var(--mono); font-size: .84rem; color: var(--accent); }
+  .taxonomy td:nth-child(2) { font-weight: 600; }
+  .tv { display: inline-flex; align-items: center; gap: 5px; margin-right: 12px; white-space: nowrap; }
+  .tv i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .methods td:first-child { font-family: var(--sans); font-size: .92rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .methods td:first-child, .methods td.num { width: 1%; }
+  .methods td.num { text-align: right; padding-right: 20px; }
+  .methods td:last-child { max-width: 70ch; }
+  #sources-text { margin: 0; }
+
+  /* Pixel icons: Kenney 1-Bit Pack (CC0), tiles redrawn as SVG paths so they
+     stay crisp and take the surrounding text colour. */
+  .ico { display: inline-block; width: 16px; height: 16px; flex: none; vertical-align: -3px; background: currentColor;
+         -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+  .i-delisted { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 1h6v1h-6zM3 2h2v1h-2zM11 2h2v1h-2zM2 3h1v1h-1zM5 3h6v1h-6zM13 3h1v1h-1zM2 4h1v1h-1zM4 4h1v1h-1zM6 4h6v1h-6zM13 4h1v1h-1zM1 5h1v1h-1zM3 5h1v1h-1zM7 5h6v1h-6zM14 5h1v1h-1zM1 6h1v1h-1zM3 6h2v1h-2zM8 6h5v1h-5zM14 6h1v1h-1zM1 7h1v1h-1zM3 7h3v1h-3zM9 7h4v1h-4zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h4v1h-4zM10 8h3v1h-3zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h5v1h-5zM11 9h2v1h-2zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h6v1h-6zM12 10h1v1h-1zM14 10h1v1h-1zM2 11h1v1h-1zM4 11h6v1h-6zM11 11h1v1h-1zM13 11h1v1h-1zM2 12h1v1h-1zM5 12h6v1h-6zM13 12h1v1h-1zM3 13h2v1h-2zM11 13h2v1h-2zM5 14h6v1h-6z'/></svg>"); }  /* tile 37,21 */
+  .i-region { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M4 2h8v1h-8zM3 3h10v1h-10zM3 4h2v1h-2zM11 4h2v1h-2zM3 5h2v1h-2zM11 5h2v1h-2zM2 7h12v1h-12zM2 8h5v1h-5zM9 8h5v1h-5zM2 9h4v1h-4zM10 9h4v1h-4zM2 10h4v1h-4zM10 10h4v1h-4zM2 11h5v1h-5zM9 11h5v1h-5zM2 12h5v1h-5zM9 12h5v1h-5zM2 13h12v1h-12z'/></svg>"); }  /* tile 0,10 */
+  .i-servers { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 2h5v1h-5zM3 3h9v1h-9zM2 4h11v1h-11zM2 5h11v1h-11zM2 6h4v1h-4zM8 6h2v1h-2zM12 6h1v1h-1zM2 7h4v1h-4zM8 7h2v1h-2zM12 7h1v1h-1zM3 8h10v1h-10zM7 9h5v1h-5zM4 10h2v1h-2zM7 10h1v1h-1zM9 10h1v1h-1zM11 10h1v1h-1zM4 11h2v1h-2zM8 11h1v1h-1zM10 11h1v1h-1zM4 12h8v1h-8zM5 13h6v1h-6z'/></svg>"); }  /* tile 34,12 */
+  .i-eol { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M3 2h10v1h-10zM3 3h1v1h-1zM12 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM3 5h2v1h-2zM11 5h2v1h-2zM4 6h2v1h-2zM10 6h2v1h-2zM5 7h2v1h-2zM9 7h2v1h-2zM5 8h2v1h-2zM9 8h2v1h-2zM4 9h2v1h-2zM7 9h2v1h-2zM10 9h2v1h-2zM3 10h2v1h-2zM6 10h4v1h-4zM11 10h2v1h-2zM3 11h1v1h-1zM5 11h6v1h-6zM12 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM3 13h10v1h-10z'/></svg>"); }  /* tile 41,12 */
+  .i-legacy { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 1h6v1h-6zM5 2h1v1h-1zM10 2h1v1h-1zM5 3h1v1h-1zM7 3h2v1h-2zM10 3h1v1h-1zM5 4h1v1h-1zM7 4h2v1h-2zM10 4h1v1h-1zM1 5h5v1h-5zM10 5h5v1h-5zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM3 7h2v1h-2zM11 7h2v1h-2zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h2v1h-2zM11 8h2v1h-2zM14 8h1v1h-1zM1 9h1v1h-1zM14 9h1v1h-1zM1 10h5v1h-5zM10 10h5v1h-5zM5 11h1v1h-1zM7 11h2v1h-2zM10 11h1v1h-1zM5 12h1v1h-1zM7 12h2v1h-2zM10 12h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM5 14h6v1h-6z'/></svg>"); }  /* tile 43,10 */
+  .i-preserved { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M4 2h2v1h-2zM10 2h2v1h-2zM3 3h4v1h-4zM9 3h4v1h-4zM2 4h2v1h-2zM6 4h4v1h-4zM12 4h2v1h-2zM1 5h2v1h-2zM7 5h2v1h-2zM13 5h2v1h-2zM1 6h2v1h-2zM13 6h2v1h-2zM1 7h2v1h-2zM13 7h2v1h-2zM2 8h2v1h-2zM12 8h2v1h-2zM3 9h2v1h-2zM11 9h2v1h-2zM4 10h2v1h-2zM10 10h2v1h-2zM5 11h2v1h-2zM9 11h2v1h-2zM6 12h4v1h-4zM7 13h2v1h-2z'/></svg>"); }  /* tile 40,10 */
+  .i-floppy { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M2 2h9v1h-9zM2 3h10v1h-10zM2 4h3v1h-3zM11 4h2v1h-2zM2 5h3v1h-3zM8 5h2v1h-2zM11 5h3v1h-3zM2 6h3v1h-3zM8 6h2v1h-2zM11 6h3v1h-3zM2 7h12v1h-12zM2 8h2v1h-2zM12 8h2v1h-2zM2 9h2v1h-2zM5 9h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM12 9h2v1h-2zM2 10h2v1h-2zM6 10h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM12 10h2v1h-2zM2 11h2v1h-2zM12 11h2v1h-2zM2 12h12v1h-12zM2 13h12v1h-12z'/></svg>"); }  /* tile 42,16 */
+  .i-d1 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M7 1h2v1h-2zM7 2h2v1h-2zM5 3h6v1h-6zM4 4h8v1h-8zM4 5h2v1h-2zM10 5h2v1h-2zM4 6h2v1h-2zM4 7h7v1h-7zM5 8h7v1h-7zM10 9h2v1h-2zM4 10h2v1h-2zM10 10h2v1h-2zM4 11h8v1h-8zM5 12h6v1h-6zM7 13h2v1h-2zM7 14h2v1h-2z'/></svg>"); }  /* tile 35,16 */
+  .i-d2 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 1h6v1h-6zM3 2h3v1h-3zM10 2h3v1h-3zM2 3h2v1h-2zM12 3h2v1h-2zM2 4h1v1h-1zM13 4h1v1h-1zM1 5h2v1h-2zM6 5h4v1h-4zM13 5h2v1h-2zM1 6h1v1h-1zM5 6h6v1h-6zM14 6h1v1h-1zM1 7h1v1h-1zM5 7h6v1h-6zM14 7h1v1h-1zM1 8h1v1h-1zM5 8h6v1h-6zM14 8h1v1h-1zM1 9h1v1h-1zM5 9h6v1h-6zM14 9h1v1h-1zM1 10h2v1h-2zM6 10h4v1h-4zM13 10h2v1h-2zM2 11h1v1h-1zM13 11h1v1h-1zM2 12h2v1h-2zM12 12h2v1h-2zM3 13h3v1h-3zM10 13h3v1h-3zM5 14h6v1h-6z'/></svg>"); }  /* tile 43,12 */
+  .i-d3 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M4 1h8v1h-8zM4 2h1v1h-1zM11 2h1v1h-1zM4 3h1v1h-1zM6 3h4v1h-4zM11 3h1v1h-1zM4 4h1v1h-1zM6 4h4v1h-4zM11 4h1v1h-1zM4 5h1v1h-1zM6 5h4v1h-4zM11 5h1v1h-1zM2 6h3v1h-3zM6 6h4v1h-4zM11 6h3v1h-3zM2 7h1v1h-1zM6 7h4v1h-4zM13 7h1v1h-1zM2 8h1v1h-1zM4 8h8v1h-8zM13 8h1v1h-1zM2 9h1v1h-1zM4 9h8v1h-8zM13 9h1v1h-1zM3 10h1v1h-1zM5 10h6v1h-6zM12 10h1v1h-1zM4 11h1v1h-1zM6 11h4v1h-4zM11 11h1v1h-1zM5 12h1v1h-1zM7 12h2v1h-2zM10 12h1v1h-1zM6 13h1v1h-1zM9 13h1v1h-1zM7 14h2v1h-2z'/></svg>"); }  /* tile 30,21 */
+  .i-d4 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M7 3h5v1h-5zM3 4h2v1h-2zM6 4h2v1h-2zM2 5h1v1h-1zM6 5h1v1h-1zM8 5h5v1h-5zM3 6h4v1h-4zM8 6h6v1h-6zM6 7h1v1h-1zM8 7h6v1h-6zM6 8h1v1h-1zM8 8h6v1h-6zM3 9h2v1h-2zM6 9h1v1h-1zM8 9h6v1h-6zM2 10h1v1h-1zM6 10h1v1h-1zM8 10h5v1h-5zM3 11h5v1h-5zM7 12h5v1h-5z'/></svg>"); }  /* tile 42,2 */
+  .i-d5 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 2h6v1h-6zM4 3h1v1h-1zM11 3h1v1h-1zM4 4h1v1h-1zM9 4h1v1h-1zM11 4h1v1h-1zM4 5h1v1h-1zM11 5h1v1h-1zM5 6h6v1h-6zM4 7h1v1h-1zM11 7h1v1h-1zM4 8h8v1h-8zM5 9h6v1h-6zM4 10h1v1h-1zM11 10h1v1h-1zM4 11h8v1h-8zM4 12h8v1h-8zM5 13h6v1h-6z'/></svg>"); }  /* tile 13,13 */
+  .i-d6 { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M8 1h3v1h-3zM14 1h1v1h-1zM7 2h1v1h-1zM11 2h3v1h-3zM1 4h14v1h-14zM1 5h1v1h-1zM7 5h2v1h-2zM14 5h1v1h-1zM1 6h1v1h-1zM4 6h1v1h-1zM7 6h2v1h-2zM11 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM3 7h3v1h-3zM7 7h2v1h-2zM10 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM4 8h1v1h-1zM7 8h2v1h-2zM11 8h1v1h-1zM14 8h1v1h-1zM1 9h1v1h-1zM14 9h1v1h-1zM1 10h14v1h-14zM1 11h14v1h-14z'/></svg>"); }  /* tile 31,15 */
+  .i-list { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M1 1h1v1h-1zM3 1h10v1h-10zM14 1h1v1h-1zM1 2h1v1h-1zM3 2h10v1h-10zM14 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM3 5h10v1h-10zM14 5h1v1h-1zM1 6h1v1h-1zM3 6h10v1h-10zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h10v1h-10zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h10v1h-10zM14 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM14 12h1v1h-1zM1 13h1v1h-1zM3 13h10v1h-10zM14 13h1v1h-1zM1 14h1v1h-1zM3 14h10v1h-10zM14 14h1v1h-1z'/></svg>"); }  /* tile 4,6 */
+  .i-classified { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M1 1h9v1h-9zM1 2h1v1h-1zM9 2h1v1h-1zM1 3h1v1h-1zM3 3h5v1h-5zM9 3h1v1h-1zM1 4h1v1h-1zM3 4h4v1h-4zM8 4h2v1h-2zM1 5h1v1h-1zM3 5h4v1h-4zM8 5h2v1h-2zM1 6h1v1h-1zM3 6h5v1h-5zM9 6h2v1h-2zM1 7h1v1h-1zM3 7h1v1h-1zM6 7h3v1h-3zM10 7h2v1h-2zM1 8h1v1h-1zM4 8h2v1h-2zM7 8h1v1h-1zM9 8h2v1h-2zM1 9h6v1h-6zM8 9h2v1h-2zM6 10h3v1h-3zM7 11h1v1h-1z'/></svg>"); }  /* tile 37,10 */
+  .i-monitor { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M1 1h1v1h-1zM14 1h1v1h-1zM1 2h1v1h-1zM14 2h1v1h-1zM1 3h1v1h-1zM14 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM14 5h1v1h-1zM1 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM14 8h1v1h-1zM1 9h14v1h-14zM2 10h12v1h-12zM7 12h2v1h-2zM7 13h2v1h-2zM2 14h12v1h-12z'/></svg>"); }  /* tile 17,10 */
+  .i-pencil { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M12 1h2v1h-2zM13 2h1v1h-1zM11 3h1v1h-1zM10 4h1v1h-1zM8 5h1v1h-1zM12 5h2v1h-2zM7 6h1v1h-1zM9 6h1v1h-1zM13 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM5 8h1v1h-1zM9 8h3v1h-3zM4 9h1v1h-1zM8 9h3v1h-3zM3 10h1v1h-1zM7 10h3v1h-3zM12 10h1v1h-1zM2 11h1v1h-1zM6 11h3v1h-3zM12 11h1v1h-1zM2 12h1v1h-1zM5 12h3v1h-3zM11 12h1v1h-1zM2 13h1v1h-1zM4 13h3v1h-3zM9 13h2v1h-2zM2 14h4v1h-4z'/></svg>"); }  /* tile 42,6 */
+  .i-robot { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M5 1h6v1h-6zM2 2h2v1h-2zM5 2h6v1h-6zM12 2h2v1h-2zM1 3h3v1h-3zM5 3h1v1h-1zM7 3h2v1h-2zM10 3h1v1h-1zM12 3h3v1h-3zM1 4h3v1h-3zM5 4h6v1h-6zM12 4h3v1h-3zM1 5h3v1h-3zM12 5h3v1h-3zM1 6h14v1h-14zM1 7h5v1h-5zM10 7h5v1h-5zM1 8h2v1h-2zM5 8h1v1h-1zM10 8h1v1h-1zM13 8h2v1h-2zM1 9h2v1h-2zM5 9h1v1h-1zM10 9h1v1h-1zM13 9h2v1h-2zM1 10h1v1h-1zM4 10h3v1h-3zM9 10h3v1h-3zM14 10h1v1h-1zM1 11h2v1h-2zM4 11h8v1h-8zM13 11h2v1h-2zM1 12h2v1h-2zM4 12h2v1h-2zM10 12h2v1h-2zM13 12h2v1h-2zM4 13h2v1h-2zM10 13h2v1h-2zM4 14h2v1h-2zM10 14h2v1h-2z'/></svg>"); }  /* tile 30,6 */
+  .i-gear { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M3 2h2v1h-2zM7 2h2v1h-2zM11 2h2v1h-2zM2 3h12v1h-12zM2 4h12v1h-12zM3 5h3v1h-3zM10 5h3v1h-3zM3 6h2v1h-2zM11 6h2v1h-2zM2 7h3v1h-3zM7 7h2v1h-2zM11 7h3v1h-3zM2 8h3v1h-3zM7 8h2v1h-2zM11 8h3v1h-3zM3 9h2v1h-2zM11 9h2v1h-2zM3 10h3v1h-3zM10 10h3v1h-3zM2 11h12v1h-12zM2 12h12v1h-12zM3 13h2v1h-2zM7 13h2v1h-2zM11 13h2v1h-2z'/></svg>"); }  /* tile 45,16 */
+  .i-chart { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M2 2h12v1h-12zM2 3h1v1h-1zM13 3h1v1h-1zM2 4h1v1h-1zM4 4h2v1h-2zM13 4h1v1h-1zM2 5h1v1h-1zM4 5h2v1h-2zM13 5h1v1h-1zM2 6h1v1h-1zM4 6h2v1h-2zM7 6h2v1h-2zM13 6h1v1h-1zM2 7h1v1h-1zM4 7h2v1h-2zM7 7h2v1h-2zM13 7h1v1h-1zM2 8h1v1h-1zM4 8h2v1h-2zM7 8h2v1h-2zM10 8h2v1h-2zM13 8h1v1h-1zM2 9h1v1h-1zM4 9h2v1h-2zM7 9h2v1h-2zM10 9h2v1h-2zM13 9h1v1h-1zM2 10h1v1h-1zM4 10h2v1h-2zM7 10h2v1h-2zM10 10h2v1h-2zM13 10h1v1h-1zM2 11h1v1h-1zM4 11h2v1h-2zM7 11h2v1h-2zM10 11h2v1h-2zM13 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM2 13h12v1h-12z'/></svg>"); }  /* tile 3,6 */
+  .i-doc { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M2 1h13v1h-13zM1 2h14v1h-14zM1 3h2v1h-2zM1 4h2v1h-2zM4 4h11v1h-11zM1 5h2v1h-2zM4 5h11v1h-11zM1 6h2v1h-2zM1 7h2v1h-2zM4 7h11v1h-11zM1 8h2v1h-2zM4 8h11v1h-11zM1 9h2v1h-2zM1 10h2v1h-2zM4 10h11v1h-11zM1 11h2v1h-2zM4 11h8v1h-8zM14 11h1v1h-1zM1 12h2v1h-2zM1 13h2v1h-2zM4 13h11v1h-11zM1 14h2v1h-2zM4 14h11v1h-11z'/></svg>"); }  /* tile 10,10 */
+  .i-ghost { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M6 0h4v1h-4zM5 1h1v1h-1zM10 1h1v1h-1zM4 2h1v1h-1zM11 2h1v1h-1zM4 3h1v1h-1zM11 3h1v1h-1zM4 4h1v1h-1zM11 4h1v1h-1zM4 5h1v1h-1zM11 5h1v1h-1zM2 6h3v1h-3zM11 6h3v1h-3zM1 7h1v1h-1zM14 7h1v1h-1zM1 8h1v1h-1zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h2v1h-2zM11 9h2v1h-2zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h2v1h-2zM11 10h2v1h-2zM14 10h1v1h-1zM1 11h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM14 11h1v1h-1zM1 12h1v1h-1zM4 12h1v1h-1zM6 12h4v1h-4zM11 12h1v1h-1zM14 12h1v1h-1zM2 13h3v1h-3zM6 13h1v1h-1zM9 13h1v1h-1zM11 13h3v1h-3zM4 14h1v1h-1zM6 14h1v1h-1zM9 14h1v1h-1zM11 14h1v1h-1zM4 15h3v1h-3zM9 15h3v1h-3z'/></svg>"); }  /* tile 24,8 */
+  .i-left { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M6 3h3v1h-3zM5 4h1v1h-1zM8 4h1v1h-1zM4 5h1v1h-1zM8 5h6v1h-6zM3 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM3 9h1v1h-1zM13 9h1v1h-1zM4 10h1v1h-1zM8 10h6v1h-6zM5 11h1v1h-1zM8 11h1v1h-1zM6 12h3v1h-3z'/></svg>"); }  /* tile 31,20 */
+  .i-right { --icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><path d='M7 3h3v1h-3zM7 4h1v1h-1zM10 4h1v1h-1zM2 5h6v1h-6zM11 5h1v1h-1zM2 6h1v1h-1zM12 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM12 9h1v1h-1zM2 10h6v1h-6zM11 10h1v1h-1zM7 11h1v1h-1zM10 11h1v1h-1zM7 12h3v1h-3z'/></svg>"); }  /* tile 29,20 */
+  h1 .ico { width: 28px; height: 28px; margin-right: 10px; vertical-align: -3px; color: var(--accent); }
+  h2 .ico { width: 18px; height: 18px; margin-right: 8px; vertical-align: -2px; color: var(--accent); }
+  .taxonomy .ico { color: var(--accent); margin-right: 6px; }
+  .stamp { display: inline-flex; align-items: center; gap: 5px; }
+  .empty { text-align: center; padding: 28px 12px !important; color: var(--muted); font-style: italic; }
+  .empty .ico { display: block; width: 32px; height: 32px; margin: 0 auto 8px; opacity: .5; }
+
+  @media (max-width: 640px) {
+    th.col-plat, td.col-plat, th.col-year, td.col-year, th.col-src, td.col-src { display: none; }
+    tr.detail > td { padding: 10px 8px; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="ico i-floppy" aria-hidden="true"></span>Delisted Games Dataset</h1>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filters">
+    <label class="search">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+      <input type="search" id="q" placeholder="Search title, publisher, developer, platform…" aria-label="Search">
+    </label>
+    <select class="pill" id="f-source" aria-label="Source"></select>
+    <select class="pill" id="f-status" aria-label="Classification method">
+      <option value="">All methods</option>
+      <option value="manual review">Manually reviewed</option>
+      <option value="LLM (Haiku)">LLM (Haiku)</option>
+      <option value="rules">Rules</option>
+      <option value="none">Not yet classified</option>
+    </select>
+    <select class="pill" id="f-sort" aria-label="Sort">
+      <option value="title">Sort: title</option>
+      <option value="event-desc">Sort: event year (newest)</option>
+      <option value="event-asc">Sort: event year (oldest)</option>
+      <option value="sources">Sort: number of sources</option>
+    </select>
+  </div>
+  <fieldset class="dimfilter">
+    <legend class="box-label">Filter by dimension <button type="button" id="dim-clear" hidden>Clear</button></legend>
+    <div class="dimopts" id="dimopts"></div>
+  </fieldset>
+  <div class="above-table">
+    <div class="count" id="count"></div>
+    <div class="key" id="key"></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Title</th><th class="col-src">Sources</th><th class="col-plat">Platforms</th>
+        <th class="col-year">Event year</th><th>Classification (D1–D7)</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <button id="prev"><span class="ico i-left" aria-hidden="true"></span> Previous</button><span id="page"></span><button id="next">Next <span class="ico i-right" aria-hidden="true"></span></button>
+  </div>
+
+  <h2><span class="ico i-chart" aria-hidden="true"></span>Taxonomy</h2>
+  <div class="tax-wrap"><table class="taxonomy">
+    <thead><tr><th>ID</th><th>Dimension</th><th>Question answered</th><th>Values</th></tr></thead>
+    <tbody id="taxonomy"></tbody>
+  </table></div>
+
+  <h2 id="methods"><span class="ico i-doc" aria-hidden="true"></span>Classification methods</h2>
+  <div class="tax-wrap"><table class="taxonomy methods">
+    <thead><tr><th>Method</th><th>Titles</th><th>How the labels were assigned</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ico i-pencil" aria-hidden="true"></span>Manually reviewed</td><td class="num" data-m="manual review"></td>
+        <td>A random sample, stratified by source, labelled by hand by the authors from rule suggestions and annotator notes.</td></tr>
+      <tr><td><span class="ico i-robot" aria-hidden="true"></span>LLM (Claude Haiku)</td><td class="num" data-m="LLM (Haiku)"></td>
+        <td>Titles with free text (Dead Game Wiki notes, Delisted Games narratives) or records from several sources.
+          Claude Haiku labelled them from the source data; they are not individually reviewed.
+          On the manually reviewed pilot, Haiku agreed with the human labels on 97&ndash;99% of titles per dimension.
+          Each title carries a high, medium or low confidence.</td></tr>
+      <tr><td><span class="ico i-gear" aria-hidden="true"></span>Rules</td><td class="num" data-m="rules"></td>
+        <td>Fixed rules over structured source fields, e.g. Steam Tracker type &ldquo;Purchase disabled&rdquo; &rarr;
+          D1 = Unavailable. These titles have no free text; dimensions the fields do not cover stay Unknown.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2><span class="ico i-monitor" aria-hidden="true"></span>Sources</h2>
+  <p id="sources-text"></p>
+</main>
+
+<script src="games.js"></script>
+<script src="classification.js"></script>
+<script>
+(() => {
+  const SOURCES = {
+    steam_tracker:  { icon: "monitor", label: "Steam Tracker",  url: "https://steam-tracker.com/apps/delisted" },
+    doesitplay:     { icon: "d2", label: "Does It Play?",  url: "https://www.doesitplay.org/" },
+    delisted_games: { icon: "delisted", label: "Delisted Games", url: "https://delistedgames.com/" },
+    dead_game_list: { icon: "servers", label: "Dead Game Wiki", url: "https://stopkillinggames.wiki.gg/wiki/Dead_game_list" },
+  };
+
+  // Table III; tone per value: good / mid / bad / none (no or neutral evidence).
+  const DIMS = [
+    ["D1", "Digital Availability", "Can I purchase this game from a digital store?",
+      { "Available": "good", "Regionally Limited": "mid", "Unavailable": "bad", "Never Offered": "none" }],
+    ["D2", "Physical Availability", "Can I purchase this game in a physical format?",
+      { "Retail": "good", "Second-hand": "mid", "Never released": "none" }],
+    ["D3", "Medium Completeness", "Is the game complete, or do I need major downloads?",
+      { "Complete": "good", "Partial": "mid", "Key or launcher only": "bad" }],
+    ["D4", "Online Dependency", "Can I play this game offline?",
+      { "None": "good", "Minor": "mid", "Optional Multiplayer": "mid", "Launch Authentication": "bad", "Core Gameplay": "bad" }],
+    ["D5", "Service Status", "Is there a server active to run this game?",
+      { "Active": "good", "End-of-life announced": "mid", "Shut down": "bad", "N/A": "none" }],
+    ["D6", "Platform Accessibility", "Does this game run on my hardware?",
+      { "Run on current hardware platform or OS": "good", "Legacy Hardware": "mid", "Legacy OS": "mid" }],
+    ["D7", "Preservation", "Is the game preserved to any extent?",
+      { "Dev-Preserved": "good", "Fan-Resurrected": "good", "Fan-Preserved": "mid", "None": "bad" }],
+  ];
+  const tone = (i, v) => DIMS[i][3][v] || "none";
+  const DIM_ICONS = ["d1", "d2", "d3", "d4", "d5", "d6", "preserved"];
+  const ico = (k) => `<span class="ico i-${k}" aria-hidden="true"></span>`;
+
+  const PAGE_SIZE = 50;
+  const games = window.GAMES || [];
+  const cls = window.CLASSIFICATION || {};
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
+  const uniq = (a) => [...new Set(a.filter(Boolean))];
+
+  // Precompute per-title fields used by search, filters and sorting.
+  for (const g of games) {
+    g.name = g.r[0].n || g.id;
+    g.sources = uniq(g.r.map((r) => r.s));
+    g.platforms = uniq(g.r.map((r) => r.p));
+    const ey = g.r.map((r) => +r.ey).filter(Boolean);
+    g.event = ey.length ? Math.min(...ey) : null;
+    g.text = [g.id, ...g.r.flatMap((r) => [r.n, r.pub, r.dev, r.p])].join(" ").toLowerCase();
+    g.c = cls[g.id] || null;
+  }
+
+  // Stats.
+  const nRecords = games.reduce((n, g) => n + g.r.length, 0);
+  const nClassified = games.filter((g) => g.c).length;
+  const nManual = games.filter((g) => g.c?.m === "manual review").length;
+  const statItems = [
+    [games.length.toLocaleString(), "unique titles", "d6"],
+    [nRecords.toLocaleString(), "source records", "list"],
+    ...Object.entries(SOURCES).map(([k, s]) =>
+      [games.filter((g) => g.sources.includes(k)).length.toLocaleString(), `titles in ${s.label}`, s.icon]),
+    [nClassified.toLocaleString(), "titles classified", "classified"],
+    [nManual.toLocaleString(), "manually reviewed", "pencil"],
+  ];
+  document.getElementById("stats").innerHTML = statItems.map(([b, s, i]) =>
+    `<div class="stat"><div class="stat-head"><b>${b}</b>${ico(i)}</div><span>${esc(s)}</span></div>`).join("");
+
+  // Filter controls.
+  const $ = (id) => document.getElementById(id);
+  $("f-source").innerHTML = `<option value="">All sources</option>` +
+    Object.entries(SOURCES).map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join("");
+  // One checkbox per dimension; a checked dimension gets its own value selector.
+  $("dimopts").innerHTML = DIMS.map(([id, name, , vals], i) => `<div class="dimopt">
+      <label><input type="checkbox" data-dim="${i}"><span>${ico(DIM_ICONS[i])}<b>${id}</b> ${esc(name)}</span></label>
+      <select data-dim="${i}" aria-label="${id} value" disabled><option value="">Any value</option>${
+        uniq([...Object.keys(vals), "N/A", "Unknown"]).map((v) => `<option>${esc(v)}</option>`).join("")}</select>
+    </div>`).join("");
+  const dimBoxes = [...$("dimopts").querySelectorAll("input")];
+  const dimVals = [...$("dimopts").querySelectorAll("select")];
+  const dimPicks = () => dimBoxes.filter((b) => b.checked).map((b) => [+b.dataset.dim, dimVals[b.dataset.dim].value]);
+  $("dimopts").addEventListener("change", (e) => {
+    if (e.target.type === "checkbox") {
+      const sel = dimVals[e.target.dataset.dim];
+      sel.disabled = !e.target.checked;
+      if (!e.target.checked) sel.value = "";
+    }
+    $("dim-clear").hidden = !dimBoxes.some((b) => b.checked);
+    update(true);
+  });
+  $("dim-clear").addEventListener("click", () => {
+    for (const b of dimBoxes) b.checked = false;
+    for (const v of dimVals) { v.value = ""; v.disabled = true; }
+    $("dim-clear").hidden = true;
+    update(true);
+  });
+  // A select is as wide as its longest option; size each pill to the text it shows instead.
+  const measure = document.createElement("span");
+  measure.className = "pill-measure";
+  const markPills = () => {
+    for (const s of document.querySelectorAll("select.pill")) {
+      s.classList.toggle("on", !!s.value && s.id !== "f-sort");
+      s.parentNode.appendChild(measure);
+      measure.textContent = s.selectedOptions[0]?.textContent || "";
+      s.style.width = `${Math.ceil(measure.getBoundingClientRect().width) + 14 + 28 + 2}px`;
+    }
+    measure.remove();
+  };
+  markPills();
+  document.fonts?.ready.then(markPills);
+
+  // Colour legend for the D1–D7 squares.
+  $("key").innerHTML = [["good", "Least restrictive"], ["mid", "Partially restrictive"],
+    ["bad", "Most restrictive"], ["none", "Unknown / not applicable"]]
+    .map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("");
+
+  for (const td of document.querySelectorAll("td[data-m]"))
+    td.textContent = games.filter((g) => g.c?.m === td.dataset.m).length.toLocaleString();
+  if (nClassified === games.length) $("f-status").querySelector('option[value="none"]').remove();
+
+  $("taxonomy").innerHTML = DIMS.map(([id, name, q, vals]) =>
+    `<tr><td>${id}</td><td>${ico(DIM_ICONS[+id.slice(1) - 1])}${esc(name)}</td><td>${esc(q)}</td><td>${[...Object.entries(vals), ["Unknown", "none"]]
+      .map(([v, t]) => `<span class="tv"><i style="background:var(--${t})"></i>${esc(v)}</span>`).join("")}</td></tr>`
+  ).join("");
+
+  $("sources-text").innerHTML = Object.values(SOURCES)
+    .map((s) => `<a href="${s.url}" rel="noopener noreferrer" target="_blank">${esc(s.label)}</a>`).join(" · ") +
+    ` <br><small>Pixel icons: <a href="https://kenney.nl/assets/1-bit-pack" rel="noopener noreferrer" target="_blank">1-Bit Pack by Kenney</a> (CC0).</small>`;
+
+  // Rendering.
+  let page = 0, filtered = games, open = null, picked = new Set();
+
+  function chips(g) {
+    if (!g.c) return `<span class="pending">Not yet classified</span>`;
+    return `<div class="chips">` + g.c.d.map((v, i) =>
+      `<span class="chip ${tone(i, v)}${picked.size && !picked.has(i) ? " off" : ""}" title="${DIMS[i][0]} ${esc(DIMS[i][1])}: ${esc(v)}">${i + 1}</span>`
+    ).join("") + `</div>`;
+  }
+
+  function badges(g) {
+    return g.sources.map((s) =>
+      `<span class="badge" style="color:var(--${s})">${esc(SOURCES[s].label)}</span>`).join("");
+  }
+
+  function recordCard(r) {
+    const url = safeUrl(r.url);
+    const rows = [["Name", r.n], ["Platform", r.p], ["Publisher", r.pub], ["Developer", r.dev],
+                  ["Release year", r.ry], ["Event year", r.ey], ["Status", r.st]]
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+    return `<div class="card"><div class="card-head"><h3 style="color:var(--${r.s})">${esc(SOURCES[r.s].label)}</h3></div>
+      <dl>${rows}${url ? `<dt>Link</dt><dd><a href="${esc(url)}" rel="noopener noreferrer" target="_blank">${esc(new URL(url).hostname)}</a></dd>` : ""}</dl>
+      ${r.x ? `<p class="excerpt">${esc(r.x)}</p>` : ""}</div>`;
+  }
+
+  // Stamps summarise the most telling labels on the catalogue card.
+  function stamps(d) {
+    const out = [];
+    if (d[0] === "Unavailable") out.push(["", "delisted", "Delisted"]);
+    else if (d[0] === "Regionally Limited") out.push(["warn", "region", "Region-locked"]);
+    if (d[4] === "Shut down") out.push(["", "servers", "Servers down"]);
+    else if (d[4] === "End-of-life announced") out.push(["warn", "eol", "End of life"]);
+    if (d[5] === "Legacy Hardware" || d[5] === "Legacy OS") out.push(["warn", "legacy", d[5]]);
+    if (["Dev-Preserved", "Fan-Resurrected", "Fan-Preserved"].includes(d[6])) out.push(["ok", "preserved", d[6]]);
+    return out.length ? `<div class="stamps">${out.map(([c, i, t]) =>
+      `<span class="stamp ${c}">${ico(i)}${esc(t)}</span>`).join("")}</div>` : "";
+  }
+
+  function classificationCard(g) {
+    const head = `<div class="card-head"><h3>${esc(g.name)}</h3></div>`;
+    if (!g.c) return `<div class="card catalog">${head}<p class="pending">Not yet classified</p></div>`;
+    const rows = g.c.d.map((v, i) =>
+      `<tr><td><b>${DIMS[i][0]}</b>${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
+    const method = { "manual review": "Manually reviewed", "LLM (Haiku)": "LLM (Claude Haiku), not reviewed", "rules": "Rules over source fields" }[g.c.m] || g.c.m;
+    return `<div class="card catalog">${head}${stamps(g.c.d)}<table class="cls-table">${rows}</table>
+      <p class="excerpt"><b>Method:</b> ${esc(method)}${g.c.conf ? ` · ${esc(g.c.conf)} confidence` : ""}</p>
+      ${g.c.note ? `<p class="excerpt"><b>Annotator note:</b> ${esc(g.c.note)}</p>` : ""}
+      ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}</div>`;
+  }
+
+  function render() {
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    page = Math.min(page, pages - 1);
+    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    $("rows").innerHTML = slice.map((g) => {
+      const plat = g.platforms.slice(0, 3).join(", ") + (g.platforms.length > 3 ? ` +${g.platforms.length - 3}` : "");
+      const row = `<tr class="game" data-id="${esc(g.id)}" aria-expanded="${open === g.id}">
+        <td>${esc(g.name)}</td><td class="col-src">${badges(g)}</td>
+        <td class="col-plat plat">${esc(plat)}</td><td class="col-year num">${g.event ?? "—"}</td>
+        <td>${chips(g)}</td></tr>`;
+      const detail = open === g.id
+        ? `<tr class="detail"><td colspan="5"><div class="detail-grid">${classificationCard(g)}${g.r.map(recordCard).join("")}</div></td></tr>`
+        : "";
+      return row + detail;
+    }).join("") || `<tr><td colspan="5" class="empty">${ico("ghost")}No titles match these filters.</td></tr>`;
+    $("count").textContent = `${filtered.length.toLocaleString()} of ${games.length.toLocaleString()} titles`;
+    $("page").textContent = `Page ${page + 1} of ${pages}`;
+    $("prev").disabled = page === 0;
+    $("next").disabled = page >= pages - 1;
+  }
+
+  function update(resetPage) {
+    const q = $("q").value.trim().toLowerCase();
+    const src = $("f-source").value, status = $("f-status").value;
+    const picks = dimPicks();
+    picked = new Set(picks.map(([i]) => i));
+    filtered = games.filter((g) =>
+      (!q || g.text.includes(q)) &&
+      (!src || g.sources.includes(src)) &&
+      (!status || (status === "none" ? !g.c : g.c?.m === status)) &&
+      (!picks.length || (g.c && picks.every(([i, v]) => !v || g.c.d[i] === v))));
+    const sort = $("f-sort").value;
+    const byTitle = (a, b) => a.name.localeCompare(b.name);
+    const cmp = {
+      "title": byTitle,
+      "event-desc": (a, b) => (b.event ?? -1) - (a.event ?? -1) || byTitle(a, b),
+      "event-asc": (a, b) => (a.event ?? 1e4) - (b.event ?? 1e4) || byTitle(a, b),
+      "sources": (a, b) => b.sources.length - a.sources.length || byTitle(a, b),
+    }[sort];
+    filtered = [...filtered].sort(cmp);
+    if (resetPage) page = 0;
+    render();
+  }
+
+  let timer;
+  $("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => update(true), 150); });
+  for (const id of ["f-source", "f-status", "f-sort"]) $(id).addEventListener("change", () => { markPills(); update(true); });
+  $("prev").addEventListener("click", () => { page--; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
+  $("next").addEventListener("click", () => { page++; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
+  $("rows").addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
+    const tr = e.target.closest("tr.game");
+    if (!tr) return;
+    open = open === tr.dataset.id ? null : tr.dataset.id;
+    render();
+  });
+
+  update(true);
+})();
+</script>
+</body>
+</html>
