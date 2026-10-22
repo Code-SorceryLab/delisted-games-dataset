@@ -103,7 +103,18 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) { .edge, .hl { transition: none; } }
 </style>
+<link rel="stylesheet" href="site-nav.css">
 
+<nav class="site-bar" aria-label="Site">
+  <span class="site-brand">SKVG Project</span>
+  <div class="site-tabs">
+    <a class="site-tab" href="dataset/index.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M2.5 8H17.5M2.5 12.25H17.5M8 8V16.5"/></svg>Dataset</a>
+    <a class="site-tab" href="pipeline.html" aria-current="page">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="10" r="2.2"/><circle cx="16" cy="4.5" r="2.2"/><circle cx="16" cy="15.5" r="2.2"/><path d="M6.2 10H10M10 4.5V15.5M10 4.5H13.8M10 15.5H13.8"/></svg>Pipeline</a>
+  </div>
+  <span></span>
+</nav>
 <div class="wrap">
   <h1>SKVG Pipeline Map</h1>
 
