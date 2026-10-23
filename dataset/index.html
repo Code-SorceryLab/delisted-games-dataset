@@ -168,6 +168,9 @@
   .methods td.num { text-align: right; padding-right: 20px; }
   .methods td:last-child { max-width: 70ch; }
   #sources-text { margin: 0; }
+  .download td:nth-child(2) { font-family: var(--mono); font-size: .88rem; }
+  .download td.num, .download th:nth-child(n+3) { text-align: right; }
+  .download td:first-child { font: 600 .95rem/1.4 var(--sans); white-space: nowrap; }
 
   /* Pixel icons: Kenney 1-Bit Pack (CC0), tiles redrawn as SVG paths so they
      stay crisp and take the surrounding text colour. */
@@ -214,12 +217,14 @@
 </head>
 <body>
 <nav class="site-bar" aria-label="Site">
-  <span class="site-brand">SKVG Project</span>
+  <span class="site-brand">Delisted Games Dataset</span>
   <div class="site-tabs">
     <a class="site-tab" href="../dataset/index.html" aria-current="page">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M2.5 8H17.5M2.5 12.25H17.5M8 8V16.5"/></svg>Dataset</a>
     <a class="site-tab" href="../pipeline.html">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="10" r="2.2"/><circle cx="16" cy="4.5" r="2.2"/><circle cx="16" cy="15.5" r="2.2"/><path d="M6.2 10H10M10 4.5V15.5M10 4.5H13.8M10 15.5H13.8"/></svg>Pipeline</a>
+    <a class="site-tab" href="../code/index.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 5.5 2 10l4.5 4.5M13.5 5.5 18 10l-4.5 4.5M11.5 3.5l-3 13"/></svg>Code</a>
   </div>
   <span></span>
 </nav>
@@ -293,12 +298,19 @@
     </tbody>
   </table></div>
 
+  <h2 id="download"><span class="ico i-floppy" aria-hidden="true"></span>Download raw data</h2>
+  <div class="tax-wrap"><table class="taxonomy download">
+    <thead><tr><th>Source</th><th>File</th><th>Records</th><th>Size</th></tr></thead>
+    <tbody id="download-rows"></tbody>
+  </table></div>
+
   <h2><span class="ico i-monitor" aria-hidden="true"></span>Sources</h2>
   <p id="sources-text"></p>
 </main>
 
 <script src="games.js"></script>
 <script src="classification.js"></script>
+<script src="raw/files.js"></script>
 <script>
 (() => {
   const SOURCES = {
@@ -308,7 +320,7 @@
     dead_game_list: { icon: "servers", label: "Dead Game Wiki", url: "https://stopkillinggames.wiki.gg/wiki/Dead_game_list" },
   };
 
-  // Table III; tone per value: good / mid / bad / none (no or neutral evidence).
+  // Tone per value: good / mid / bad / none (no or neutral evidence).
   const DIMS = [
     ["D1", "Digital Availability", "Can I purchase this game from a digital store?",
       { "Available": "good", "Regionally Limited": "mid", "Unavailable": "bad", "Never Offered": "none" }],
@@ -424,6 +436,15 @@
   $("sources-text").innerHTML = Object.values(SOURCES)
     .map((s) => `<a href="${s.url}" rel="noopener noreferrer" target="_blank">${esc(s.label)}</a>`).join(" · ") +
     ` <br><small>Pixel icons: <a href="https://kenney.nl/assets/1-bit-pack" rel="noopener noreferrer" target="_blank">1-Bit Pack by Kenney</a> (CC0).</small>`;
+
+  // Raw files are optional: without raw/files.js the section is hidden.
+  const RAW = window.RAW_FILES || {};
+  const mb = (bytes) => (bytes / 1e6).toLocaleString("en", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + " MB";
+  $("download-rows").innerHTML = Object.entries(RAW).map(([k, f]) =>
+    `<tr><td style="color:var(--${k})">${ico(SOURCES[k].icon)}${esc(SOURCES[k].label)}</td>` +
+    `<td><a href="raw/${encodeURIComponent(f.file)}">${esc(f.file)}</a></td>` +
+    `<td class="num">${f.records.toLocaleString()}</td><td class="num">${mb(f.bytes)}</td></tr>`).join("");
+  if (!Object.keys(RAW).length) for (const id of ["download", "download-rows"]) $(id).closest("h2, .tax-wrap").hidden = true;
 
   // Rendering.
   let page = 0, filtered = games, open = null, picked = new Set();

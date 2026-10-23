@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SKVG Pipeline Map</title>
+<title>Pipeline Map</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
@@ -106,21 +106,23 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
 <link rel="stylesheet" href="site-nav.css">
 
 <nav class="site-bar" aria-label="Site">
-  <span class="site-brand">SKVG Project</span>
+  <span class="site-brand">Delisted Games Dataset</span>
   <div class="site-tabs">
     <a class="site-tab" href="dataset/index.html">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M2.5 8H17.5M2.5 12.25H17.5M8 8V16.5"/></svg>Dataset</a>
     <a class="site-tab" href="pipeline.html" aria-current="page">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="10" r="2.2"/><circle cx="16" cy="4.5" r="2.2"/><circle cx="16" cy="15.5" r="2.2"/><path d="M6.2 10H10M10 4.5V15.5M10 4.5H13.8M10 15.5H13.8"/></svg>Pipeline</a>
+    <a class="site-tab" href="code/index.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 5.5 2 10l4.5 4.5M13.5 5.5 18 10l-4.5 4.5M11.5 3.5l-3 13"/></svg>Code</a>
   </div>
   <span></span>
 </nav>
 <div class="wrap">
-  <h1>SKVG Pipeline Map</h1>
+  <h1>Pipeline Map</h1>
 
   <figure>
     <div class="fig-scroll">
-    <svg viewBox="0 0 1270 520" role="group" aria-label="SKVG data pipeline. Four websites feed data collection, which produces the raw data. Unify and filter turns it into the unified dataset and summary stats. The unified dataset feeds IGDB enrichment, the DoesItPlay overlap and the historical analysis. IGDB release counts feed the historical analysis. The unified dataset, IGDB genres and the Delisted Games raw file feed the delisting-cause analysis, which uses local LLMs on the Delisted Games narratives.">
+    <svg viewBox="0 0 1270 520" role="group" aria-label="Data pipeline. Four websites feed data collection, which produces the raw data. Unify and filter turns it into the unified dataset and summary stats. The unified dataset feeds IGDB enrichment, the DoesItPlay overlap and the historical analysis. IGDB release counts feed the historical analysis. The unified dataset, IGDB genres and the Delisted Games raw file feed the delisting-cause analysis, which uses local LLMs on the Delisted Games narratives.">
       <defs>
         <symbol id="i-db" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M6,8 V28 A12,4 0 0 0 30,28 V8" style="fill:var(--sheet)"/><ellipse cx="18" cy="8" rx="12" ry="4" style="fill:var(--sheet)"/><path d="M6,14.7 A12,4 0 0 0 30,14.7 M6,21.3 A12,4 0 0 0 30,21.3"/></g></symbol>
         <symbol id="i-doc" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9,3 H22 L28,9 V33 H9 Z" style="fill:var(--sheet)"/><path d="M22,3 V9 H28"/><path d="M13,16 H24 M13,21 H24 M13,26 H20" stroke-width="1.6"/></g></symbol>
@@ -187,7 +189,7 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
     </svg>
     </div>
     <figcaption>
-      <span><b>Figure 1.</b> SKVG data pipeline.</span>
+      <span><b>Figure 1.</b> Data pipeline.</span>
       <span class="key"><svg viewBox="0 0 36 36"><use href="#i-doc"/></svg>data</span>
       <span class="key"><svg viewBox="0 0 36 36"><use href="#p-filter"/></svg>processing step</span>
     </figcaption>

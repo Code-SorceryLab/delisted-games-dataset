@@ -15,5 +15,7 @@ body { margin: 0; }
 .site-tab:hover { color: var(--ink); background: var(--sheet); }
 .site-tab[aria-current="page"] { color: var(--sheet); background: var(--accent); box-shadow: 0 1px 3px rgb(0 0 0 / .18); }
 .site-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 560px) { .site-bar { grid-template-columns: 1fr; justify-items: center; padding: 8px 16px; } .site-brand { display: none; } }
+@media (max-width: 560px) { .site-bar { grid-template-columns: 1fr; justify-items: center; padding: 8px 16px; } .site-brand { display: none; }
+                             .site-tab { padding: 9px 12px; gap: 6px; } }
+@media (max-width: 360px) { .site-tab svg { display: none; } }
 @media (prefers-reduced-motion: reduce) { .site-tab { transition: none; } }

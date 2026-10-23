@@ -1,0 +1,15 @@
+# Mining (Scripts/mining_*.py, IGDB_miner/)
+requests
+beautifulsoup4
+lxml
+
+# Aggregation and analysis
+pandas
+scipy
+matplotlib
+
+# Running the notebooks
+jupyter
+
+# Delisting causes (RQ3_package/delisting_causes/)
+rapidfuzz

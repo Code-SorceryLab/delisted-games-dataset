@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SKVG Project</title>
+<title>Delisted Games Dataset</title>
 <!-- The site opens on the dataset page; each page carries the tab bar (site-nav.css).
-     Old links to /#pipeline still reach the pipeline map. -->
+     Old links to /#pipeline still reach the pipeline map; /#code reaches the code. -->
 <meta http-equiv="refresh" content="0; url=dataset/index.html">
-<script>location.replace(location.hash === "#pipeline" ? "pipeline.html" : "dataset/index.html");</script>
+<script>location.replace({ "#pipeline": "pipeline.html", "#code": "code/index.html" }[location.hash] || "dataset/index.html");</script>
 </head>
 <body>
-<p><a href="dataset/index.html">Dataset</a> · <a href="pipeline.html">Pipeline map</a></p>
+<p><a href="dataset/index.html">Dataset</a> · <a href="pipeline.html">Pipeline map</a> · <a href="code/index.html">Code</a></p>
 </body>
 </html>

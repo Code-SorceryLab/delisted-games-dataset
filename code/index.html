@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+:root {
+  --paper: #fbfbfa;
+  --sheet: #ffffff;
+  --ink: #111418;
+  --muted: #5f6670;
+  --rule: #d9dcdf;
+  --accent: #2458b3;
+  --accent-tint: #e9eff9;
+  --code-bg: #f0f1f2;
+  --c-com: #6a737d;
+  --c-str: #1a7f37;
+  --c-kw: #a3368a;
+  --c-num: #b35900;
+  --c-dec: #2458b3;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+    --accent: #86acef; --accent-tint: #1d2738; --code-bg: #22262b;
+    --c-com: #8b949e; --c-str: #7ee2a0; --c-kw: #f09ad8; --c-num: #f5b36b; --c-dec: #86acef;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121417; --sheet: #191c20; --ink: #e8eaed; --muted: #9aa1aa; --rule: #30353b;
+  --accent: #86acef; --accent-tint: #1d2738; --code-bg: #22262b;
+  --c-com: #8b949e; --c-str: #7ee2a0; --c-kw: #f09ad8; --c-num: #f5b36b; --c-dec: #86acef;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); padding-inline: 20px; padding-block: 28px 64px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--serif); font-weight: 600; margin: 0; line-height: 1.2; font-size: 1.8rem; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* File list, grouped by folder. */
+.files { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+         background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; padding: 10px 0; }
+@media (max-width: 860px) { .files { position: static; max-height: 300px; } }
+.group { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); padding: 10px 14px 4px; overflow-wrap: break-word; }
+.group:first-child { padding-top: 2px; }
+.file { display: block; padding: 4px 14px 4px 22px; font-family: var(--mono); font-size: 0.84rem; color: var(--ink);
+        text-decoration: none; border-left: 3px solid transparent; overflow-wrap: break-word; }
+.file:hover { background: var(--paper); }
+.file[aria-current="true"] { background: var(--accent-tint); border-left-color: var(--accent); color: var(--accent); font-weight: 500; }
+.file:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Selected file. */
+.view { background: var(--sheet); border: 1px solid var(--rule); border-radius: 4px; min-width: 0; }
+.vhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 14px 16px; border-bottom: 1px solid var(--rule); }
+.vpath { font-family: var(--mono); font-weight: 500; font-size: 0.95rem; overflow-wrap: break-word; flex: 1 1 260px; min-width: 0; }
+.vmeta { font-size: 0.85rem; color: var(--muted); }
+.btn { font: 600 0.85rem/1 var(--sans); color: var(--ink); background: var(--code-bg); border: 1px solid var(--rule);
+       border-radius: 6px; padding: 7px 12px; cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--muted); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.code { overflow-x: auto; background: var(--code-bg); border-radius: 0 0 4px 4px; }
+.code table { border-collapse: collapse; font: 0.82rem/1.55 var(--mono); tab-size: 4; }
+.code td { padding: 0 14px 0 0; white-space: pre; vertical-align: top; }
+.code td.n { padding: 0 12px 0 14px; text-align: right; color: var(--muted); user-select: none; opacity: .7; }
+.code tr:first-child td { padding-top: 12px; }
+.code tr:last-child td { padding-bottom: 12px; }
+.t-com { color: var(--c-com); font-style: italic; }
+.t-str { color: var(--c-str); }
+.t-kw { color: var(--c-kw); }
+.t-num { color: var(--c-num); }
+.t-dec { color: var(--c-dec); }
+</style>
+<link rel="stylesheet" href="../site-nav.css">
+<body>
+<nav class="site-bar" aria-label="Site">
+  <span class="site-brand">Delisted Games Dataset</span>
+  <div class="site-tabs">
+    <a class="site-tab" href="../dataset/index.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="1.5"/><path d="M2.5 8H17.5M2.5 12.25H17.5M8 8V16.5"/></svg>Dataset</a>
+    <a class="site-tab" href="../pipeline.html">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="10" r="2.2"/><circle cx="16" cy="4.5" r="2.2"/><circle cx="16" cy="15.5" r="2.2"/><path d="M6.2 10H10M10 4.5V15.5M10 4.5H13.8M10 15.5H13.8"/></svg>Pipeline</a>
+    <a class="site-tab" href="../code/index.html" aria-current="page">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 5.5 2 10l4.5 4.5M13.5 5.5 18 10l-4.5 4.5M11.5 3.5l-3 13"/></svg>Code</a>
+  </div>
+  <span></span>
+</nav>
+<div class="wrap">
+  <h1>Source Code</h1>
+  <div class="layout">
+    <nav class="files" id="files" aria-label="Files"></nav>
+    <section class="view" aria-live="polite">
+      <div class="vhead">
+        <span class="vpath" id="vpath"></span>
+        <span class="vmeta" id="vmeta"></span>
+        <button class="btn" id="copy" type="button">Copy</button>
+        <a class="btn" id="raw" href="#">Raw file</a>
+      </div>
+      <div class="code"><table id="code"></table></div>
+    </section>
+  </div>
+</div>
+
+<script src="sources.js"></script>
+<script>
+const FILES = window.SOURCES || [];
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// Lets long snake_case names wrap at underscores instead of mid-word.
+const breakable = s => esc(s).replace(/([_/])/g, "$1<wbr>");
+
+// Small Python highlighter: comments, strings (incl. triple-quoted and
+// prefixed), decorators, keywords and numbers. Other files are shown as text.
+const PY_KW = "and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield None True False self";
+const PY_RE = new RegExp([
+  "(#[^\\n]*)",
+  "((?:[rRbBuUfF]{1,2})?(?:\"\"\"[\\s\\S]*?\"\"\"|'''[\\s\\S]*?'''|\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'))",
+  "(^[ \\t]*@[\\w.]+)",
+  "\\b(" + PY_KW.split(" ").join("|") + ")\\b",
+  "\\b(\\d[\\d_]*(?:\\.\\d+)?(?:e[+-]?\\d+)?)\\b",
+].join("|"), "gm");
+const CLASSES = [null, "t-com", "t-str", "t-dec", "t-kw", "t-num"];
+
+// Returns [text, className] pieces covering the whole source.
+function tokens(text, python) {
+  if (!python) return [[text, null]];
+  const out = [];
+  let last = 0;
+  for (const m of text.matchAll(PY_RE)) {
+    if (m.index > last) out.push([text.slice(last, m.index), null]);
+    out.push([m[0], CLASSES[m.findIndex((g, i) => i > 0 && g !== undefined)]]);
+    last = m.index + m[0].length;
+  }
+  out.push([text.slice(last), null]);
+  return out;
+}
+
+// Splits the pieces into lines so spans never cross a table row.
+function lines(text, python) {
+  const rows = [""];
+  for (const [piece, cls] of tokens(text, python)) {
+    piece.split("\n").forEach((part, i) => {
+      if (i > 0) rows.push("");
+      if (part) rows[rows.length - 1] += cls ? `<span class="${cls}">${esc(part)}</span>` : esc(part);
+    });
+  }
+  if (rows.length > 1 && rows[rows.length - 1] === "") rows.pop();
+  return rows;
+}
+
+function renderList() {
+  let html = "", group = null;
+  for (const f of FILES) {
+    if (f.group !== group) {
+      group = f.group;
+      html += `<div class="group">${breakable(group || "repository root")}/</div>`;
+    }
+    html += `<a class="file" href="#${encodeURI(f.path)}" data-path="${esc(f.path)}">${breakable(f.path.split("/").pop())}</a>`;
+  }
+  $("files").innerHTML = html;
+}
+
+function show(path) {
+  const f = FILES.find(x => x.path === path) || FILES[0];
+  if (!f) { $("vpath").textContent = "No files found (sources.js missing)."; return; }
+  const python = /\.(py|ipynb)$/.test(f.path);
+  const rows = lines(f.text, python);
+  $("code").innerHTML = rows.map((r, i) => `<tr><td class="n">${i + 1}</td><td>${r}</td></tr>`).join("");
+  $("vpath").innerHTML = breakable(f.path);
+  $("vmeta").textContent = `${rows.length.toLocaleString("en")} lines` + (f.path.endsWith(".ipynb") ? " · notebook cells" : "");
+  $("raw").href = "src/" + encodeURI(f.path);
+  for (const a of document.querySelectorAll(".file")) a.setAttribute("aria-current", a.dataset.path === f.path ? "true" : "false");
+  $("copy").onclick = () => copy(f.text);
+}
+
+function copy(text) {
+  const done = () => { $("copy").textContent = "Copied"; setTimeout(() => { $("copy").textContent = "Copy"; }, 1400); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => fallback(text, done));
+  else fallback(text, done);
+}
+
+// Clipboard API is unavailable on file:// and in some sandboxed frames.
+function fallback(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { if (document.execCommand("copy")) done(); } catch (e) {}
+  ta.remove();
+}
+
+function current() { return decodeURI(location.hash.slice(1)); }
+
+renderList();
+show(current());
+addEventListener("hashchange", () => { show(current()); scrollTo({ top: 0 }); });
+</script>
+</body>
+</html>

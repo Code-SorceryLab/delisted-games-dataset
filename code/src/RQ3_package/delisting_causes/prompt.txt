@@ -1,0 +1,46 @@
+You read entries from delistedgames.com, a volunteer-curated site that documents video games removed from sale on digital stores. Each entry has a narrative that explains when and why the game was delisted. Your task is to report which of five causes the narrative EXPLICITLY states as a reason the game was delisted, removed from sale, or made unavailable.
+
+THE FIVE CAUSES (an entry can have several, or none):
+
+LICENSING       A licence for content INSIDE the game expired or was not
+                renewed: music/soundtrack, real car or brand names, sports
+                leagues/teams/players, film/TV/comic/book tie-ins,
+                trademarks. NOT: "officially licensed" in marketing copy;
+                rights to the game itself changing hands (-> IP_CHANGE).
+IP_CHANGE       Rights to the game or franchise ITSELF were sold,
+                transferred, reverted, acquired, or disputed legally.
+SERVER          Online services or servers were shut down, and the game was
+                pulled because of it or became unplayable.
+STORE_CLOSURE   The storefront itself closed or stopped selling (Wii U/3DS
+                eShop, Xbox 360 marketplace, PS3/PSP/Vita store, Desura,
+                GameStop PC, OnLive, ...). The game left because the shop
+                closed, not because of the game.
+PUBLISHER_EXIT  The publisher or developer ceased operations, went
+                bankrupt, or was shut down. A publisher simply choosing to
+                remove the game with no stated reason does NOT count.
+
+FALLBACK FLAGS (only when none of the five causes applies):
+
+OTHER           A reason is stated but fits none of the five (e.g. replaced
+                by a remaster, platform-policy change). Put a short
+                description (at most 10 words) in other_reason.
+NOT_STATED      No reason is given, or the text says the reason is unknown.
+
+RULES
+
+1. Only count a cause the narrative states as a reason for THIS game's delisting or unavailability. Do not infer causes from the game's genre, its publisher, or your own knowledge.
+   - LICENSING needs the narrative to mention a licence, licensing, or rights to content inside the game. Removing or changing content for other reasons (political, legal, rating, censorship) is OTHER.
+   - PUBLISHER_EXIT needs the company to stop operating. A restructuring or a change of strategy is OTHER.
+   - A publishing agreement, publishing licence or publishing rights for the game ITSELF ending, expiring, lapsing or reverting (e.g. to the developer) is IP_CHANGE, not LICENSING: LICENSING is only for content INSIDE the game. Phrases such as "expired publishing agreement", "publishing rights expired", "licensing between the developer and the publisher" or "regained publishing rights" mean IP_CHANGE, also when they appear in a list of possible reasons or next to another cause.
+2. Many entries end with the game's store-page marketing copy (feature lists, product descriptions, quoted blurbs). Ignore it. Words like "licensed", "official", "soundtrack" or "online multiplayer" in marketing copy are NOT evidence.
+3. For every cause you mark true, copy a short quote (one sentence or less) VERBATIM from the narrative that states it. Copy the words exactly as they appear; do not paraphrase, shorten with "...", or fix spelling. If you cannot find such a quote, the cause is false and its quote is "".
+4. For every cause that is false, the quote is "".
+5. If any of the five causes is true, both "other" and "not_stated" are false and other_reason is "". Otherwise exactly one of "other" and "not_stated" is true.
+   - Choose OTHER whenever the narrative gives ANY reason, even a guessed one. Common OTHER reasons: replaced by a new edition, remaster, remake, bundle or collection; pulled to rework or fix the game; a business decision by the publisher; technical problems; content changes.
+   - Choose NOT_STATED only when the narrative gives no reason at all, or says the reason is unknown or that no explanation was given.
+6. A narrative can describe several delistings (different platforms or dates) with different causes. Mark every cause stated for any of them.
+7. "speculative" is true when the narrative presents the stated reason(s) as a guess rather than a confirmed fact (e.g. "most likely", "presumably", "it is assumed", "possibly"). It is false when the reasons are confirmed (e.g. announced by the publisher, developer or store) or when no reason is given.
+8. "relisted" is true when the narrative says the game was later made available again on a digital store it had been removed from, or re-released digitally (relisted, re-released, returned to sale). Staying available on a store it was never removed from is NOT relisting.
+9. "is_bundle" is true when the entry covers a bundle, collection, compilation or a whole franchise of several games rather than a single game.
+
+Answer with JSON only, following the given schema.

@@ -1,0 +1,1 @@
+window.RAW_FILES = {"steam_tracker":{"file":"steam_delisted_apps.json","bytes":1557705,"records":8101},"doesitplay":{"file":"doesitplay_games.json","bytes":1392196,"records":3610},"delisted_games":{"file":"delistedgames.json","bytes":6411911,"records":2125},"dead_game_list":{"file":"dead_games.json","bytes":527865,"records":1225}};
