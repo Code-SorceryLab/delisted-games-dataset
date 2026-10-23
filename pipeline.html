@@ -122,7 +122,7 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
 
   <figure>
     <div class="fig-scroll">
-    <svg viewBox="0 0 1270 520" role="group" aria-label="Data pipeline. Four websites feed data collection, which produces the raw data. Unify and filter turns it into the unified dataset and summary stats. The unified dataset feeds IGDB enrichment, the DoesItPlay overlap and the historical analysis. IGDB release counts feed the historical analysis. The unified dataset, IGDB genres and the Delisted Games raw file feed the delisting-cause analysis, which uses local LLMs on the Delisted Games narratives.">
+    <svg viewBox="0 0 1270 570" role="group" aria-label="Data pipeline. Four websites feed data collection, which produces the raw data. The taxonomy is built by hand from the raw data's categories. Unify and filter turns the raw data into the unified dataset and summary stats. Classification labels the unified dataset with the taxonomy. The unified dataset also feeds IGDB enrichment, the DoesItPlay overlap export and the historical analysis. IGDB release counts feed the historical analysis. The unified dataset, IGDB genres and the Delisted Games raw file feed the delisting-cause analysis, which uses local LLMs on the Delisted Games narratives.">
       <defs>
         <symbol id="i-db" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M6,8 V28 A12,4 0 0 0 30,28 V8" style="fill:var(--sheet)"/><ellipse cx="18" cy="8" rx="12" ry="4" style="fill:var(--sheet)"/><path d="M6,14.7 A12,4 0 0 0 30,14.7 M6,21.3 A12,4 0 0 0 30,21.3"/></g></symbol>
         <symbol id="i-doc" viewBox="0 0 36 36"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9,3 H22 L28,9 V33 H9 Z" style="fill:var(--sheet)"/><path d="M22,3 V9 H28"/><path d="M13,16 H24 M13,21 H24 M13,26 H20" stroke-width="1.6"/></g></symbol>
@@ -133,7 +133,9 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
         <symbol id="p-search" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="6"/><path d="M20.5,20.5 L26,26"/></g></symbol>
         <symbol id="p-overlap" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.2"><circle cx="14.5" cy="18" r="6.5"/><circle cx="21.5" cy="18" r="6.5"/></g></symbol>
         <symbol id="p-trend" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9,25 L14,18 L19,21 L27,11"/><path d="M9,28 H27" stroke-width="1.6"/></g></symbol>
-        <symbol id="p-genre" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" style="fill:var(--gap-tint)" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M10,10 H18 L26,18 L18,26 L10,18 Z"/><circle cx="14" cy="14" r="1.4" fill="currentColor"/></g></symbol>
+        <symbol id="p-link" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><g fill="none" style="stroke:var(--sheet)" stroke-width="2.4" stroke-linecap="round"><path d="M15,21 L21,15 M16,13 L18,11 A4,4 0 0 1 25,18 L23,20 M20,23 L18,25 A4,4 0 0 1 11,18 L13,16"/></g></symbol>
+        <symbol id="p-manual" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" style="fill:var(--sheet)" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M11,25 L12,20.5 L22,10.5 L25.5,14 L15.5,24 Z M20,12.5 L23.5,16"/></g></symbol>
+        <symbol id="p-genre"viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" style="fill:var(--gap-tint)" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M10,10 H18 L26,18 L18,26 L10,18 Z"/><circle cx="14" cy="14" r="1.4" fill="currentColor"/></g></symbol>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
         <marker id="ah-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah on" d="M0,0 L10,5 L0,10 z"/></marker>
         <marker id="ah-gap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah gap" d="M0,0 L10,5 L0,10 z"/></marker>
@@ -148,27 +150,34 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
         <path class="edge arrow" data-n="src_dead src_dip src_steam src_delisted collect" d="M130,190 H170"/>
         <path class="edge" data-n="src_delisted collect" d="M78,400 H130 V190"/>
         <path class="edge arrow" data-n="collect raw" d="M208,190 H290"/>
-        <path class="edge" data-n="raw unify causes" d="M328,190 H370"/>
+        <path class="edge" data-n="raw taxonomy unify causes" d="M328,190 H370"/>
+        <path class="edge arrow" data-n="raw taxonomy" d="M370,190 V70 H410"/>
         <path class="edge arrow" data-n="raw unify" d="M370,190 H410"/>
         <path class="edge" data-n="raw causes" d="M370,190 V410 H625"/>
+        <path class="edge arrow" data-n="taxonomy tax_table" d="M448,70 H540"/>
         <path class="edge" data-n="unify unified stats" d="M448,190 H495"/>
         <path class="edge arrow" data-n="unify unified" d="M495,190 H540"/>
         <path class="edge arrow" data-n="unify stats" d="M495,190 V330 H540"/>
-        <path class="edge" data-n="unified igdb rq2 rq3" d="M578,190 H625"/>
-        <path class="edge arrow" data-n="unified igdb" d="M625,190 V70 H680"/>
-        <path class="edge arrow" data-n="unified rq3" d="M625,190 H1010"/>
-        <path class="edge arrow" data-n="unified rq2" d="M625,190 V310 H680"/>
-        <path class="edge" data-n="igdb igdb_genres igdb_years" d="M718,70 H770"/>
-        <path class="edge arrow" data-n="igdb igdb_genres" d="M770,70 V125 H820"/>
-        <path class="edge arrow" data-n="igdb igdb_years" d="M770,70 V40 H820"/>
-        <path class="edge arrow" data-n="igdb_years rq3" d="M858,40 H1030 V170"/>
-        <path class="edge arrow" data-n="rq2 overlap" d="M718,310 H820"/>
+        <path class="edge" data-n="unified classify igdb dip_overlap rq3 causes" d="M578,190 H625"/>
+        <path class="edge" data-n="tax_table classify" d="M578,70 H625"/>
+        <path class="edge" data-n="unified classify" d="M625,190 V70"/>
+        <path class="edge arrow" data-n="tax_table unified classify" d="M625,70 H700"/>
+        <path class="edge arrow" data-n="classify tax_labels" d="M738,70 H850"/>
+        <path class="edge" data-n="unified rq3" d="M625,190 H940"/>
+        <path class="edge arrow" data-n="unified igdb_years rq3" d="M940,190 H1010"/>
+        <path class="edge arrow" data-n="unified dip_overlap" d="M625,190 V500 H700"/>
+        <path class="edge" data-n="unified causes" d="M625,190 V410"/>
+        <path class="edge arrow" data-n="unified igdb" d="M625,190 V310 H700"/>
+        <path class="edge" data-n="igdb igdb_genres igdb_years" d="M738,310 H790"/>
+        <path class="edge arrow" data-n="igdb igdb_years" d="M790,310 V270 H850"/>
+        <path class="edge arrow" data-n="igdb igdb_genres" d="M790,310 V350 H850"/>
+        <path class="edge" data-n="igdb_years rq3" d="M888,270 H940 V190"/>
+        <path class="edge arrow" data-n="dip_overlap overlap" d="M738,500 H850"/>
         <path class="edge" data-n="rq3 rq3_tables rq3_figs" d="M1048,190 H1145"/>
         <path class="edge arrow" data-n="rq3 rq3_tables" d="M1145,190 V150 H1185"/>
         <path class="edge arrow" data-n="rq3 rq3_figs" d="M1145,190 V245 H1185"/>
-        <path class="edge" data-n="unified causes" d="M625,190 V410"/>
         <path class="edge" data-n="unified raw causes" d="M625,410 H930"/>
-        <path class="edge" data-n="igdb_genres causes" d="M858,125 H930 V410"/>
+        <path class="edge" data-n="igdb_genres causes" d="M888,350 H930 V410"/>
         <path class="edge arrow" data-n="unified igdb_genres raw causes" d="M930,410 H1010"/>
         <path class="edge" data-n="causes causes_tables causes_figs" d="M1048,410 H1145"/>
         <path class="edge arrow" data-n="causes causes_tables" d="M1145,410 V370 H1185"/>
@@ -177,12 +186,14 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
         <circle class="dot" cx="370" cy="190" r="2.6"/>
         <circle class="dot" cx="495" cy="190" r="2.6"/>
         <circle class="dot" cx="625" cy="190" r="2.6"/>
-        <circle class="dot" cx="770" cy="70" r="2.6"/>
-        <circle class="dot" cx="1145" cy="190" r="2.6"/>
+        <circle class="dot" cx="625" cy="70" r="2.6"/>
         <circle class="dot" cx="625" cy="310" r="2.6"/>
+        <circle class="dot" cx="625" cy="410" r="2.6"/>
+        <circle class="dot" cx="790" cy="310" r="2.6"/>
+        <circle class="dot" cx="940" cy="190" r="2.6"/>
+        <circle class="dot" cx="1145" cy="190" r="2.6"/>
         <circle class="dot" cx="930" cy="410" r="2.6"/>
         <circle class="dot" cx="1145" cy="410" r="2.6"/>
-        <circle class="dot" cx="625" cy="410" r="2.6"/>
       </g>
 
       <g id="nodes"></g>
@@ -192,6 +203,7 @@ svg .sub { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
       <span><b>Figure 1.</b> Data pipeline.</span>
       <span class="key"><svg viewBox="0 0 36 36"><use href="#i-doc"/></svg>data</span>
       <span class="key"><svg viewBox="0 0 36 36"><use href="#p-filter"/></svg>processing step</span>
+      <span class="key"><svg viewBox="0 0 36 36"><use href="#p-manual"/></svg>manual step</span>
     </figcaption>
   </figure>
 
@@ -240,7 +252,31 @@ const NODES = {
     issues: [] },
 
   raw: { kind: "data", icon: "i-docs", x: 310, y: 190, name: "Raw data", sub: "4 JSON",
-    producedBy: ["@collect"], readBy: ["@unify", "@causes"], issues: [] },
+    producedBy: ["@collect"], readBy: ["@taxonomy", "@unify", "@causes"], issues: [] },
+
+  taxonomy: { kind: "process", icon: "p-manual", x: 430, y: 70, name: "Taxonomy",
+    inputs: ["The status categories used by the four sources in @raw"],
+    outputs: ["@tax_table"],
+    filters: [],
+    decisions: [
+      { t: "Seven dimensions from the sources' categories", full: true,
+        d: "The categories mined from the four sources were merged by hand into seven dimensions. Each one answers one question about a game.",
+        ex: { head: ["ID", "Dimension", "Values"], rows: [
+          ["D.1", "Digital Availability", "Available, Unavailable, Regionally Limited, Never Offered"],
+          ["D.2", "Physical Availability", "Retail, Second-hand, Never released"],
+          ["D.3", "Medium Completeness", "Complete, Partial, Key or launcher only"],
+          ["D.4", "Online Dependency", "None, Minor, Optional Multiplayer, Launch Authentication, Core Gameplay"],
+          ["D.5", "Service Status", "Active, End-of-life announced, Shut down, N/A"],
+          ["D.6", "Platform Accessibility", "Run on current hardware platform or OS, Legacy Hardware, Legacy OS"],
+          ["D.7", "Preservation", "None, Dev-Preserved, Fan-Preserved, Fan-Resurrected"]] } },
+      { t: "Unknown in every dimension",
+        d: "Every dimension also admits Unknown when the evidence does not determine a value. It records missing evidence, not a property of the game." },
+      { t: "Taxonomy v2",
+        d: "Adds N/A (D.5, no online component), Unknown, Optional Multiplayer (D.4) and the Legacy OS criterion (D.6)." }
+    ],
+    issues: [] },
+  tax_table: { kind: "data", icon: "i-doc", x: 560, y: 70, name: "Taxonomy table", sub: "Table III, 1 TEX",
+    producedBy: ["@taxonomy"], readBy: ["@classify"], issues: [] },
 
   unify: { kind: "process", icon: "p-filter", x: 430, y: 190, name: "Unify & filter",
     inputs: ["@raw"],
@@ -281,11 +317,11 @@ const NODES = {
     issues: [] },
 
   unified: { kind: "data", icon: "i-doc", x: 560, y: 190, name: "Unified dataset", sub: "1 CSV",
-    producedBy: ["@unify"], readBy: ["@igdb", "@rq2", "@rq3", "@causes"], issues: [] },
-  stats: { kind: "data", icon: "i-docs", x: 560, y: 330, name: "Summary stats", sub: "3 CSV",
+    producedBy: ["@unify"], readBy: ["@classify", "@igdb", "@dip_overlap", "@rq3", "@causes"], issues: [] },
+  stats: { kind: "data", icon: "i-docs", x: 560, y: 330, name: "Summary stats", sub: "3 CSV, 1 JSON",
     producedBy: ["@unify"], readBy: [], issues: [] },
 
-  igdb: { kind: "process", icon: "p-search", x: 700, y: 70, name: "IGDB enrichment",
+  igdb: { kind: "process", icon: "p-search", x: 720, y: 310, name: "IGDB enrichment",
     inputs: ["@unified", "IGDB genre list", "IGDB website API"],
     outputs: ["@igdb_genres", "@igdb_years"],
     filters: [
@@ -301,12 +337,50 @@ const NODES = {
         d: "From the earliest to the latest event year in the unified dataset, up to the current year." }
     ],
     issues: [] },
-  igdb_genres: { kind: "data", icon: "i-doc", x: 840, y: 125, name: "IGDB genres", sub: "1 CSV",
+  igdb_genres: { kind: "data", icon: "i-doc", x: 870, y: 350, name: "IGDB genres", sub: "1 CSV",
     producedBy: ["@igdb"], readBy: ["@causes"], issues: [] },
-  igdb_years: { kind: "data", icon: "i-doc", x: 840, y: 40, name: "IGDB releases", sub: "1 CSV",
+  igdb_years: { kind: "data", icon: "i-doc", x: 870, y: 270, name: "IGDB releases", sub: "1 CSV",
     producedBy: ["@igdb"], readBy: ["@rq3"], issues: [] },
 
-  rq2: { kind: "process", icon: "p-overlap", x: 700, y: 310, name: "DoesItPlay overlap",
+  classify: { kind: "process", icon: "p-overlap", x: 720, y: 70, name: "Classification",
+    inputs: ["@unified", "@tax_table, plus the mapping rules below, as the codebook", "Claude Haiku 5.5", "Claude Opus 5.5 with web search (validation)"],
+    outputs: ["@tax_labels"],
+    filters: [
+      { t: "Evidence from the dataset only",
+        d: "No external lookup. Marketing or product-description text is never used as evidence." },
+      { t: "Other sources only for the same platform",
+        d: "A record from another source is used only if it covers the same hardware platform. D.7 is the exception." }
+    ],
+    decisions: [
+      { t: "One label set per title",
+        d: "The 14,340 rows of the unified dataset come down to 11,762 unique simplified titles. Each title is judged on the platform listed in its source record." },
+      { t: "Rules where the fields decide", full: true,
+        d: "Titles found in only one source, when that source is Steam Tracker or DoesItPlay, are labelled by fixed rules on the source fields. Some of the rules:",
+        ex: { head: ["Source", "Field", "Rule"], rows: [
+          ["Steam Tracker", "Type", "Delisted / Purchase disabled / F2P (unavailable) → D.1 Unavailable"],
+          ["Delisted Games", "—", "D.1 Unavailable on the listed platform"],
+          ["DoesItPlay", "OfflinePlay", "Yes → D.4 None and D.5 N/A; Yes* → Minor; No → Core Gameplay"],
+          ["DoesItPlay", "DownloadRequired", "No → D.3 Complete; No* / Yes* → Partial; Yes → Key or launcher only"],
+          ["Dead Game List", "State", "Dead → D.5 Shut down; Dev-/Fan-Preserved and Fan-Resurrected → same value in D.7"],
+          ["All", "platform", "Legacy platform → D.6 Legacy Hardware; only discontinued runtimes or OS → Legacy OS"]] } },
+      { t: "LLM where judgement is needed",
+        d: "3,120 titles with free text (Delisted Games, Dead Game List) or in more than one source are labelled by Claude Haiku 5.5, 40 titles per prompt. It gets every source record for the title, answers with the allowed values only, and adds a confidence level and a one-sentence rationale." },
+      { t: "Web-search validation",
+        d: "196 titles, stratified by source (95% confidence, ±7%). Claude Opus 5.5 searched the web for each game's current status, without seeing the labels. Where both labels are known, they agree on 68–96% of the titles per dimension (D.1–D.6), and the web fills in 334 of the 832 Unknown labels. The sample keeps its rule or LLM labels." },
+      { t: "Official servers only (D.5)",
+        d: "Active means official servers. Fan-run servers count in D.7, so 196 titles that Haiku marked Active are reset to Shut down." },
+      { t: "Taxonomy v2 applied to the LLM labels",
+        d: "The Haiku labels predate v2. D.4 Minor becomes Optional Multiplayer for 180 titles, and D.6 becomes Legacy OS for 9 browser-plugin games." }
+    ],
+    issues: [
+      "3,120 titles keep Haiku labels that were not checked one by one; 447 low-confidence labels and about 370 that disagree with the rules are not reviewed.",
+      "The validation reference is itself an LLM with web search, not reviewed by a human.",
+      "D.6 is mostly assumed: PC and Steam games count as running on current hardware."
+    ] },
+  tax_labels: { kind: "data", icon: "i-docs", x: 870, y: 70, name: "Taxonomy labels", sub: "4 CSV",
+    producedBy: ["@classify"], readBy: ["Dataset page"], issues: [] },
+
+  dip_overlap: { kind: "process", icon: "p-link", x: 720, y: 500, name: "DoesItPlay overlap",
     inputs: ["@unified"],
     outputs: ["@overlap"],
     filters: [
@@ -318,8 +392,8 @@ const NODES = {
       { t: "One row per pair", d: "A game with several DoesItPlay tests appears once for each test." }
     ],
     issues: [] },
-  overlap: { kind: "data", icon: "i-docs", x: 840, y: 310, name: "Overlap tables", sub: "4 CSV",
-    producedBy: ["@rq2"], readBy: [], issues: [] },
+  overlap: { kind: "data", icon: "i-docs", x: 870, y: 500, name: "Overlap tables", sub: "4 CSV",
+    producedBy: ["@dip_overlap"], readBy: [], issues: [] },
 
   rq3: { kind: "process", icon: "p-trend", x: 1030, y: 190, name: "Historical analysis",
     inputs: ["@unified", "@igdb_years"],

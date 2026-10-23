@@ -171,6 +171,43 @@
   .download td:nth-child(2) { font-family: var(--mono); font-size: .88rem; }
   .download td.num, .download th:nth-child(n+3) { text-align: right; }
   .download td:first-child { font: 600 .95rem/1.4 var(--sans); white-space: nowrap; }
+  .methods-note { margin: 0; font-size: .95rem; max-width: 90ch; }
+
+  /* Web-search validation on the catalogue card. */
+  .cls-table th { font: 500 .7rem/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+                  text-align: left; padding: 0 8px 5px 0; border-bottom: 1px solid var(--rule); }
+  .cls-table.web td:first-child { width: 36%; }
+  .cls-table td.diff { box-shadow: inset 2px 0 0 var(--mid); padding-left: 6px; }
+
+  /* Report form: a blank index card. */
+  .report-cta { margin: -10px 0 22px; font-size: .92rem; color: var(--muted); }
+  .report-btn { font: 500 .74rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent);
+                background: none; border: 1px solid currentColor; border-radius: 2px; padding: 5px 8px; margin-top: 10px; cursor: pointer; }
+  .report-btn:hover { background: var(--accent-tint); }
+  .report { background: var(--sheet); border: 1px solid var(--rule); border-top: 3px solid var(--accent); padding: 16px; max-width: 860px; }
+  .report > p { margin: 0 0 14px; font-size: .9rem; color: var(--muted); max-width: 75ch; }
+  .report .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px 16px; }
+  .report label { display: grid; gap: 4px; font-size: .86rem; min-width: 0; }
+  .report label > span { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .report label > span em { font-style: normal; color: var(--accent); }
+  .report .wide { grid-column: 1 / -1; }
+  .report input, .report select, .report textarea { font: inherit; font-size: .9rem; color: var(--ink); background: var(--paper);
+    border: 1px solid var(--rule); border-radius: 2px; padding: 6px 8px; width: 100%; min-width: 0; }
+  .report textarea { min-height: 90px; resize: vertical; }
+  .report input:focus-visible, .report select:focus-visible, .report textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .report details { margin: 14px 0 0; border-top: 1px solid var(--rule); padding-top: 10px; }
+  .report summary { cursor: pointer; font-size: .9rem; }
+  .report details .grid { margin-top: 10px; }
+  .report .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .report .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+  .report button[type="submit"] { font: 600 .8rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--sheet);
+    background: var(--accent); border: 0; border-radius: 2px; padding: 10px 16px; cursor: pointer; }
+  .report button[type="submit"]:disabled { opacity: .5; cursor: default; }
+  .report .linked { font-size: .86rem; color: var(--muted); }
+  .report .linked button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+  #r-status { font-size: .9rem; margin: 0; }
+  #r-status.ok { color: var(--good); } #r-status.err { color: var(--bad); }
+  .report .paused { color: var(--ink); border-left: 3px solid var(--mid); padding: 2px 0 2px 10px; }
 
   /* Pixel icons: Kenney 1-Bit Pack (CC0), tiles redrawn as SVG paths so they
      stay crisp and take the surrounding text colour. */
@@ -230,6 +267,7 @@
 </nav>
 <main>
   <h1><span class="ico i-floppy" aria-hidden="true"></span>Delisted Games Dataset</h1>
+  <p class="report-cta">Is a game no longer available, or back on sale? <a href="#report">Report it</a>.</p>
 
   <div class="stats" id="stats"></div>
 
@@ -241,10 +279,10 @@
     <select class="pill" id="f-source" aria-label="Source"></select>
     <select class="pill" id="f-status" aria-label="Classification method">
       <option value="">All methods</option>
-      <option value="manual review">Manually reviewed</option>
       <option value="LLM (Haiku)">LLM (Haiku)</option>
       <option value="rules">Rules</option>
       <option value="none">Not yet classified</option>
+      <option value="web">Web-validated sample</option>
     </select>
     <select class="pill" id="f-sort" aria-label="Sort">
       <option value="title">Sort: title</option>
@@ -275,6 +313,51 @@
     <button id="prev"><span class="ico i-left" aria-hidden="true"></span> Previous</button><span id="page"></span><button id="next">Next <span class="ico i-right" aria-hidden="true"></span></button>
   </div>
 
+  <h2 id="report"><span class="ico i-pencil" aria-hidden="true"></span>Report a change</h2>
+  <form class="report" id="report-form" novalidate>
+    <p class="paused" id="r-paused" hidden>Sending reports is switched off for now: the paper that describes this dataset
+      is under anonymous peer review, and reports would reveal who maintains it. You can fill in the form, but nothing is
+      sent. Reporting will open after the review.</p>
+    <p>Tell us when a game is delisted, loses its servers, or comes back. Each report becomes a public issue that a
+      maintainer checks against the evidence before the dataset changes. Do not include personal information.</p>
+    <p class="linked" id="r-linked" hidden>Reporting a change to <b id="r-linked-name"></b>.
+      <button type="button" id="r-unlink">Report a different game instead</button></p>
+    <input type="hidden" name="game_id">
+    <div class="grid">
+      <label><span>Game title <em>*</em></span><input name="game" required maxlength="200" autocomplete="off"></label>
+      <label><span>Platform <em>*</em></span><input name="platform" required maxlength="100" placeholder="e.g. PC, PS4, Xbox 360"></label>
+      <label><span>Store</span><input name="store" maxlength="100" placeholder="e.g. Steam, PlayStation Store"></label>
+      <label><span>Steam AppID</span><input name="steam_appid" inputmode="numeric" pattern="\d{1,10}" maxlength="10"></label>
+      <label><span>What happened? <em>*</em></span><select name="event" required>
+        <option value="">Choose…</option>
+        <option value="delisted">Delisted from a digital store</option>
+        <option value="purchase_disabled">Purchase disabled</option>
+        <option value="servers_shut_down">Online servers shut down</option>
+        <option value="eol_announced">End of life announced</option>
+        <option value="available_again">Available again (relisted)</option>
+        <option value="other">Other change</option>
+      </select></label>
+      <label><span>When</span><input name="event_date" maxlength="10" placeholder="YYYY, YYYY-MM or YYYY-MM-DD" pattern="\d{4}(-\d{2}(-\d{2})?)?"></label>
+      <label class="wide"><span>Evidence link <em>*</em></span><input name="evidence_url" type="url" required maxlength="500"
+        placeholder="Store page, announcement, news article…"></label>
+      <label class="wide"><span>Details</span><textarea name="details" maxlength="2000"
+        placeholder="What changed, on which regions or editions, and anything else that helps us check it."></textarea></label>
+    </div>
+    <details>
+      <summary>Classify along the taxonomy (optional)</summary>
+      <div class="grid" id="r-dims"></div>
+    </details>
+    <div class="grid" style="margin-top:14px">
+      <label><span>Email (optional, never published)</span><input name="email" type="email" maxlength="200" autocomplete="email"></label>
+    </div>
+    <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+    <div id="r-captcha" style="margin-top:14px"></div>
+    <div class="actions">
+      <button type="submit" id="r-submit">Send report</button>
+      <p id="r-status" role="status"></p>
+    </div>
+  </form>
+
   <h2><span class="ico i-chart" aria-hidden="true"></span>Taxonomy</h2>
   <div class="tax-wrap"><table class="taxonomy">
     <thead><tr><th>ID</th><th>Dimension</th><th>Question answered</th><th>Values</th></tr></thead>
@@ -285,18 +368,24 @@
   <div class="tax-wrap"><table class="taxonomy methods">
     <thead><tr><th>Method</th><th>Titles</th><th>How the labels were assigned</th></tr></thead>
     <tbody>
-      <tr><td><span class="ico i-pencil" aria-hidden="true"></span>Manually reviewed</td><td class="num" data-m="manual review"></td>
-        <td>A random sample, stratified by source, labelled by hand by the authors from rule suggestions and annotator notes.</td></tr>
       <tr><td><span class="ico i-robot" aria-hidden="true"></span>LLM (Claude Haiku)</td><td class="num" data-m="LLM (Haiku)"></td>
         <td>Titles with free text (Dead Game Wiki notes, Delisted Games narratives) or records from several sources.
           Claude Haiku labelled them from the source data; they are not individually reviewed.
-          On the manually reviewed pilot, Haiku agreed with the human labels on 97&ndash;99% of titles per dimension.
           Each title carries a high, medium or low confidence.</td></tr>
       <tr><td><span class="ico i-gear" aria-hidden="true"></span>Rules</td><td class="num" data-m="rules"></td>
         <td>Fixed rules over structured source fields, e.g. Steam Tracker type &ldquo;Purchase disabled&rdquo; &rarr;
           D1 = Unavailable. These titles have no free text; dimensions the fields do not cover stay Unknown.</td></tr>
     </tbody>
   </table></div>
+
+  <h2 id="validation"><span class="ico i-chart" aria-hidden="true"></span>Web-search validation</h2>
+  <p class="methods-note">We checked a random sample of <span data-m="web"></span> titles, stratified by source, against their
+    current status on the web (October 2026). For each title, Claude Opus 5.5 searched store pages, official announcements,
+    wikis and preservation projects, without seeing our labels, and returned one value per dimension with the pages it cited.
+    Where both labels are known, they agree on 96% of the titles for D1, 79% for D2, 82% for D3, 68% for D4, 85% for D5
+    and 93% for D6 (D7: only 5 titles). The web also filled in 334 of the 832 Unknown labels of the sample.
+    These titles keep their rule or LLM labels; their catalogue card shows the web labels next to them.
+    Pick &ldquo;Web-validated sample&rdquo; in the method filter to list them.</p>
 
   <h2 id="download"><span class="ico i-floppy" aria-hidden="true"></span>Download raw data</h2>
   <div class="tax-wrap"><table class="taxonomy download">
@@ -364,14 +453,14 @@
   // Stats.
   const nRecords = games.reduce((n, g) => n + g.r.length, 0);
   const nClassified = games.filter((g) => g.c).length;
-  const nManual = games.filter((g) => g.c?.m === "manual review").length;
+  const nWeb = games.filter((g) => g.c?.web).length;
   const statItems = [
     [games.length.toLocaleString(), "unique titles", "d6"],
     [nRecords.toLocaleString(), "source records", "list"],
     ...Object.entries(SOURCES).map(([k, s]) =>
       [games.filter((g) => g.sources.includes(k)).length.toLocaleString(), `titles in ${s.label}`, s.icon]),
     [nClassified.toLocaleString(), "titles classified", "classified"],
-    [nManual.toLocaleString(), "manually reviewed", "pencil"],
+    [nWeb.toLocaleString(), "web-validated sample", "chart"],
   ];
   document.getElementById("stats").innerHTML = statItems.map(([b, s, i]) =>
     `<div class="stat"><div class="stat-head"><b>${b}</b>${ico(i)}</div><span>${esc(s)}</span></div>`).join("");
@@ -424,8 +513,8 @@
     ["bad", "Most restrictive"], ["none", "Unknown / not applicable"]]
     .map(([t, l]) => `<span><i style="background:var(--${t})"></i>${l}</span>`).join("");
 
-  for (const td of document.querySelectorAll("td[data-m]"))
-    td.textContent = games.filter((g) => g.c?.m === td.dataset.m).length.toLocaleString();
+  for (const el of document.querySelectorAll("[data-m]"))
+    el.textContent = games.filter((g) => el.dataset.m === "web" ? g.c?.web : g.c?.m === el.dataset.m).length.toLocaleString();
   if (nClassified === games.length) $("f-status").querySelector('option[value="none"]').remove();
 
   $("taxonomy").innerHTML = DIMS.map(([id, name, q, vals]) =>
@@ -488,13 +577,20 @@
   function classificationCard(g) {
     const head = `<div class="card-head"><h3>${esc(g.name)}</h3></div>`;
     if (!g.c) return `<div class="card catalog">${head}<p class="pending">Not yet classified</p></div>`;
+    const w = g.c.web;
     const rows = g.c.d.map((v, i) =>
-      `<tr><td><b>${DIMS[i][0]}</b>${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td></tr>`).join("");
-    const method = { "manual review": "Manually reviewed", "LLM (Haiku)": "LLM (Claude Haiku), not reviewed", "rules": "Rules over source fields" }[g.c.m] || g.c.m;
-    return `<div class="card catalog">${head}${stamps(g.c.d)}<table class="cls-table">${rows}</table>
+      `<tr><td><b>${DIMS[i][0]}</b>${esc(DIMS[i][1])}</td><td class="val ${tone(i, v)}">${esc(v)}</td>` +
+      (w ? `<td class="val ${tone(i, w.d[i])}${w.d[i] !== v ? " diff" : ""}">${esc(w.d[i])}</td>` : "") + `</tr>`).join("");
+    const thead = w ? `<thead><tr><th>Dimension</th><th>Dataset</th><th>Web, Oct 2026</th></tr></thead>` : "";
+    const method = { "LLM (Haiku)": "LLM (Claude Haiku), not reviewed", "rules": "Rules over source fields" }[g.c.m] || g.c.m;
+    const links = w ? w.urls.map(safeUrl).filter(Boolean).map((u) =>
+      `<a href="${esc(u)}" rel="noopener noreferrer" target="_blank">${esc(new URL(u).hostname)}</a>`).join(", ") : "";
+    return `<div class="card catalog">${head}${stamps(g.c.d)}<table class="cls-table${w ? " web" : ""}">${thead}<tbody>${rows}</tbody></table>
       <p class="excerpt"><b>Method:</b> ${esc(method)}${g.c.conf ? ` · ${esc(g.c.conf)} confidence` : ""}</p>
-      ${g.c.note ? `<p class="excerpt"><b>Annotator note:</b> ${esc(g.c.note)}</p>` : ""}
-      ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}</div>`;
+      ${g.c.ev ? `<p class="excerpt"><b>Evidence:</b> ${esc(g.c.ev)}</p>` : ""}
+      ${w ? `<p class="excerpt"><b>Web check</b> (Claude Opus 5.5 with web search, ${esc(w.conf)} confidence; marked values differ): ${esc(w.why)}</p>` : ""}
+      ${links ? `<p class="excerpt"><b>Web sources:</b> ${links}</p>` : ""}
+      <button type="button" class="report-btn" data-report="${esc(g.id)}">Report a change</button></div>`;
   }
 
   function render() {
@@ -526,7 +622,7 @@
     filtered = games.filter((g) =>
       (!q || g.text.includes(q)) &&
       (!src || g.sources.includes(src)) &&
-      (!status || (status === "none" ? !g.c : g.c?.m === status)) &&
+      (!status || (status === "none" ? !g.c : status === "web" ? g.c?.web : g.c?.m === status)) &&
       (!picks.length || (g.c && picks.every(([i, v]) => !v || g.c.d[i] === v))));
     const sort = $("f-sort").value;
     const byTitle = (a, b) => a.name.localeCompare(b.name);
@@ -548,10 +644,113 @@
   $("next").addEventListener("click", () => { page++; render(); window.scrollTo({ top: $("count").offsetTop - 10 }); });
   $("rows").addEventListener("click", (e) => {
     if (e.target.closest("a")) return;
+    const rep = e.target.closest("[data-report]");
+    if (rep) { reportGame(games.find((g) => g.id === rep.dataset.report)); return; }
     const tr = e.target.closest("tr.game");
     if (!tr) return;
     open = open === tr.dataset.id ? null : tr.dataset.id;
     render();
+  });
+
+  // Report form. With an endpoint, reports go to the Worker in report-worker/;
+  // without one, the form opens a pre-filled GitHub issue in `repo` instead.
+  // With neither (during double-blind review), the form works but sends nothing.
+  const REPORT = {
+    endpoint: "",          // e.g. "https://delisted-games-report.<subdomain>.workers.dev"
+    turnstileSiteKey: "",  // Cloudflare Turnstile site key
+    repo: "",              // "owner/repo"; leave empty during double-blind review
+  };
+  const paused = !REPORT.endpoint && !REPORT.repo;
+  $("r-paused").hidden = !paused;
+  const EVENT_LABELS = Object.fromEntries([...$("report-form").event.options].filter((o) => o.value).map((o) => [o.value, o.text]));
+  const form = $("report-form");
+  $("r-dims").innerHTML = DIMS.map(([id, name, , vals], i) =>
+    `<label><span>${id} ${esc(name)}</span><select name="${id}">${
+      uniq(["Unknown", ...Object.keys(vals)]).map((v) => `<option>${esc(v)}</option>`).join("")}</select></label>`).join("");
+
+  function reportGame(g) {
+    form.reset();
+    if (g) {
+      form.game_id.value = g.id;
+      form.game.value = g.name;
+      form.platform.value = g.c?.src ? (g.r.find((r) => r.s === g.c.src)?.p || g.platforms[0] || "") : (g.platforms[0] || "");
+      const appid = g.r.map((r) => /steamdb\.info\/app\/(\d+)/.exec(r.url || "")?.[1]).find(Boolean);
+      if (appid) form.steam_appid.value = appid;
+      if (g.c) DIMS.forEach(([id], i) => { form[id].value = g.c.d[i]; });
+    }
+    $("r-linked").hidden = !g;
+    $("r-linked-name").textContent = g ? g.name : "";
+    $("r-status").textContent = "";
+    $("report").scrollIntoView({ behavior: "smooth" });
+    form.game.focus({ preventScroll: true });
+  }
+  $("r-unlink").addEventListener("click", () => reportGame(null));
+
+  // Render the captcha only when the Worker is configured.
+  let captchaToken = "";
+  if (REPORT.endpoint && REPORT.turnstileSiteKey) {
+    window.onTurnstileLoad = () => window.turnstile.render("#r-captcha", {
+      sitekey: REPORT.turnstileSiteKey, callback: (t) => { captchaToken = t; }, "expired-callback": () => { captchaToken = ""; } });
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit";
+    s.async = true;
+    document.head.appendChild(s);
+  } else if (!paused) {
+    $("r-submit").textContent = "Open as GitHub issue";
+  }
+
+  function reportData() {
+    const f = Object.fromEntries(new FormData(form));
+    const dims = Object.fromEntries(DIMS.map(([id]) => [id, f[id] || "Unknown"]));
+    for (const [id] of DIMS) delete f[id];
+    for (const k of Object.keys(f)) f[k] = f[k].trim();
+    return { ...f, dims };
+  }
+
+  // Same layout as the Worker's issueBody(), for the no-Worker fallback.
+  function fallbackIssueUrl(d) {
+    const v = (x) => x || "_No response_";
+    const body = [
+      "### Game", d.game, "### Dataset ID", d.game_id || "_New game (not in the dataset)_",
+      "### Platform", d.platform, "### Store", v(d.store), "### Steam AppID", v(d.steam_appid),
+      "### Event", EVENT_LABELS[d.event], "### Event date", v(d.event_date), "### Evidence", d.evidence_url,
+      "### Details", v(d.details),
+      "### Proposed classification", "| Dimension | Value |\n|---|---|\n" +
+        DIMS.map(([id, name]) => `| ${id} ${name} | ${d.dims[id]} |`).join("\n"),
+    ].join("\n\n");
+    const q = new URLSearchParams({ title: `[Report] ${d.game}: ${EVENT_LABELS[d.event]}`, body, labels: "community-report" });
+    return `https://github.com/${REPORT.repo}/issues/new?${q}`;
+  }
+
+  const status = (msg, kind = "") => { $("r-status").textContent = msg; $("r-status").className = kind; };
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const d = reportData();
+    if (d.website) return;
+    if (paused) { status("Not sent: reporting is switched off during the anonymous review.", "err"); return; }
+    if (!REPORT.endpoint) { window.open(fallbackIssueUrl(d), "_blank", "noopener"); return; }
+    if (!captchaToken) { status("Please complete the captcha first.", "err"); return; }
+    $("r-submit").disabled = true;
+    status("Sending…");
+    try {
+      const res = await fetch(REPORT.endpoint, { method: "POST", headers: { "Content-Type": "application/json" },
+                                                 body: JSON.stringify({ ...d, token: captchaToken }) });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || `The server answered ${res.status}.`);
+      form.reset();
+      $("r-linked").hidden = true;
+      $("r-status").innerHTML = out.url
+        ? `Thank you! Your report is <a href="${esc(safeUrl(out.url))}" target="_blank" rel="noopener noreferrer">issue #${esc(out.issue)}</a>.`
+        : "Thank you! Your report was received.";
+      $("r-status").className = "ok";
+    } catch (err) {
+      status(err.message || "Could not send the report.", "err");
+    } finally {
+      $("r-submit").disabled = false;
+      captchaToken = "";
+      window.turnstile?.reset();
+    }
   });
 
   update(true);
